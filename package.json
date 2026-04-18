@@ -1,0 +1,53 @@
+{
+  "name": "mcp-sentinel",
+  "version": "0.1.0",
+  "description": "Static security scanner for MCP server configs — catches tool poisoning, command injection, and permission gaps before you connect an agent.",
+  "type": "module",
+  "bin": {
+    "mcp-sentinel": "./dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc && node scripts/copy-assets.mjs",
+    "dev": "tsx watch src/cli.ts",
+    "scan": "tsx src/cli.ts scan",
+    "ui": "tsx src/web/server.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "security",
+    "scanner",
+    "ai-agent",
+    "owasp"
+  ],
+  "license": "MIT",
+  "exports": {
+    ".": "./dist/index.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "files": [
+    "dist",
+    "fixtures"
+  ],
+  "dependencies": {
+    "chalk": "^5.4.1",
+    "commander": "^13.1.0",
+    "express": "^4.21.2",
+    "glob": "^11.0.1",
+    "multer": "^1.4.5-lts.1",
+    "open": "^10.1.0"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.0",
+    "@types/multer": "^1.4.12",
+    "@types/node": "^22.13.10",
+    "tsx": "^4.19.3",
+    "typescript": "^5.8.2",
+    "vitest": "^3.0.8"
+  }
+}

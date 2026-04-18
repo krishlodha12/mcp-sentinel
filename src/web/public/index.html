@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MCP Sentinel — security scanner</title>
+  <link rel="stylesheet" href="/styles.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <div class="page">
+    <header class="header">
+      <div class="logo">
+        <span class="logo-icon" aria-hidden="true">◆</span>
+        <div>
+          <h1>MCP Sentinel</h1>
+          <p class="tagline">Scan your agent plugins before you trust them</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <a href="https://github.com/krishlodha12/mcp-sentinel" class="btn btn-ghost" id="github-link" target="_blank" rel="noopener">GitHub</a>
+      </div>
+    </header>
+
+    <section class="hero card">
+      <div class="dropzone" id="dropzone">
+        <input type="file" id="file-input" accept=".json,application/json" hidden />
+        <div class="dropzone-inner">
+          <p class="drop-title">Drop your MCP config here</p>
+          <p class="drop-hint">mcp.json · claude_desktop_config.json · server.json · tools.json</p>
+          <div class="drop-buttons">
+            <button type="button" class="btn btn-primary" id="browse-btn">Choose file</button>
+            <button type="button" class="btn btn-secondary" id="demo-btn">Run demo scan</button>
+          </div>
+        </div>
+      </div>
+      <p class="paste-label">Or paste JSON</p>
+      <textarea id="paste-area" rows="4" placeholder='{"mcpServers": { ... }}'></textarea>
+      <button type="button" class="btn btn-primary btn-full" id="paste-scan-btn">Scan pasted config</button>
+    </section>
+
+    <section id="results" class="results hidden">
+      <div class="summary-row" id="summary-row"></div>
+
+      <div class="meta-bar">
+        <span id="meta-text"></span>
+        <button type="button" class="btn btn-ghost btn-sm" id="export-json">Export JSON</button>
+      </div>
+
+      <div class="owasp-section hidden" id="owasp-section">
+        <h2>OWASP Agentic Top 10</h2>
+        <div class="owasp-chips" id="owasp-chips"></div>
+      </div>
+
+      <h2 class="findings-heading">Findings</h2>
+      <div id="findings-list"></div>
+      <p id="clean-message" class="clean hidden">No issues matched. That doesn't mean you're bulletproof — runtime behavior still needs review.</p>
+    </section>
+
+    <footer class="footer">
+      <p>Static analysis only. Maps findings to <a href="https://genai.owasp.org/resource/owasp-top-10-for-agentic-applications-for-2026/" target="_blank" rel="noopener">OWASP Agentic Top 10 (2026)</a>.</p>
+    </footer>
+  </div>
+  <script src="/app.js"></script>
+</body>
+</html>
