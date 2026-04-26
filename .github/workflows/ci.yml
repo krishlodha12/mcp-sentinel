@@ -21,3 +21,5 @@ jobs:
         working-directory: mcp-sentinel
       - run: npm run scan -- fixtures/vulnerable-setup
         working-directory: mcp-sentinel
+      - run: npm run scan -- fixtures/real-world/mcp-remote-cve-2025-6514.json
+        working-directory: mcp-sentinel

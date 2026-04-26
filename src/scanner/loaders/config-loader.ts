@@ -152,6 +152,7 @@ function loadMcpConfig(path: string): ScanTarget[] {
       packages: inferPackagesFromArgs(args, path, entry.command),
       rawEnv: entry.env ?? {},
       commandLine,
+      remoteUrls: entry.url ? [entry.url] : [],
     });
   }
 
@@ -252,6 +253,10 @@ function loadServerJson(path: string): ScanTarget[] {
     }
   }
 
+  const remoteUrls = (data.remotes ?? [])
+    .map((r) => r.url)
+    .filter((u): u is string => typeof u === "string");
+
   return [
     {
       serverName: name,
@@ -262,6 +267,7 @@ function loadServerJson(path: string): ScanTarget[] {
       resources,
       packages,
       rawEnv: {},
+      remoteUrls,
     },
   ];
 }
@@ -285,6 +291,7 @@ function loadToolsManifest(path: string): ScanTarget[] {
       resources: [],
       packages: [],
       rawEnv: {},
+      remoteUrls: [],
     },
   ];
 }

@@ -82,9 +82,14 @@ export const remoteTransportCheck: SecurityCheck = {
   description: "Flags HTTP (non-TLS) remote MCP endpoints in config.",
   run(target: ScanTarget): Finding[] {
     const findings: Finding[] = [];
-    const blob = target.commandLine ?? "";
+    const candidates = [
+      ...(target.remoteUrls ?? []),
+      target.commandLine ?? "",
+    ];
 
-    if (/^http:\/\//i.test(blob) || /"url"\s*:\s*"http:/i.test(JSON.stringify(target))) {
+    for (const blob of candidates) {
+      if (!/http:\/\//i.test(blob)) continue;
+
       findings.push({
         id: makeFindingId(),
         checkId: "insecure-transport",
@@ -101,6 +106,7 @@ export const remoteTransportCheck: SecurityCheck = {
         references: ["https://modelcontextprotocol.io/"],
         cwe: "CWE-319",
       });
+      break;
     }
 
     return findings;

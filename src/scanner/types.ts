@@ -28,6 +28,7 @@ export interface ScanTarget {
   packages: PackageDefinition[];
   rawEnv: Record<string, string>;
   commandLine?: string;
+  remoteUrls: string[];
 }
 
 export interface ToolDefinition {

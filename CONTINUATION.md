@@ -16,7 +16,9 @@ Location: `mcp-sentinel/` in this workspace.
 - [x] OWASP ASI01–ASI10 mapping
 - [x] Terminal, JSON, Markdown reporters
 - [x] Web UI (`npm run ui`) — drag/drop, paste, demo scan, explain buttons
-- [x] Vulnerable fixtures in `fixtures/vulnerable-setup/`
+- [x] Three-fixture validation (broken / clean / real-world) — `fixtures/CHECK_MATRIX.md`
+- [x] Real-world case: CVE-2025-6514 (Vulnerable MCP Project)
+- [x] Fixture contract tests in `tests/fixtures.test.ts`
 - [x] Vitest suite in `tests/scanner.test.ts`
 
 ## Commands you'll use

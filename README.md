@@ -67,7 +67,19 @@ Opens at `http://localhost:3847`. Drop a config, paste JSON, or hit **Run demo s
 - `server.json` — MCP registry format (tools in `_meta`, `packages`, `remotes`)
 - `tools.json` — exported tool manifests
 
-## Project layout
+## Fixture validation (Phase 1 done criteria)
+
+Three fixtures — see `fixtures/CHECK_MATRIX.md`:
+
+| Folder | Role |
+|--------|------|
+| `fixtures/vulnerable-setup/` | Broken — one planted issue per check |
+| `fixtures/clean-setup/` | Clean — same shape, zero critical/high/medium |
+| `fixtures/real-world/` | CVE-2025-6514 (mcp-remote) from [Vulnerable MCP Project](https://vulnerablemcp.info/) |
+
+```bash
+npm test   # includes fixture contract tests
+```
 
 ```
 src/scanner/checks/   one file per rule

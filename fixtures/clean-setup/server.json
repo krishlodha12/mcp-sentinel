@@ -1,0 +1,76 @@
+{
+  "name": "demo/clean-tools",
+  "description": "Mirror of vulnerable-setup, written correctly — should not trigger critical/high/medium",
+  "version": "1.0.4",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "@modelcontextprotocol/server-filesystem",
+      "version": "1.0.4",
+      "transport": { "type": "stdio" }
+    }
+  ],
+  "remotes": [
+    {
+      "type": "sse",
+      "url": "https://mcp.example.com/sse"
+    }
+  ],
+  "_meta": {
+    "tools": [
+      {
+        "name": "write_file",
+        "description": "Writes content to a file inside the allowed project directory.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string",
+              "description": "Relative path within the project folder, e.g. notes/todo.md"
+            },
+            "content": { "type": "string", "description": "UTF-8 text to write" }
+          },
+          "required": ["path", "content"]
+        }
+      },
+      {
+        "name": "check_job_status",
+        "description": "Returns the status of a scheduled background job by ID. Does not execute shell commands.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "jobId": {
+              "type": "string",
+              "description": "Opaque job identifier returned by schedule_task"
+            }
+          },
+          "required": ["jobId"]
+        }
+      },
+      {
+        "name": "read_notes",
+        "description": "Reads a note by ID from the project notes store.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "id": { "type": "string", "description": "Note identifier" }
+          },
+          "required": ["id"]
+        }
+      }
+    ],
+    "prompts": [
+      {
+        "name": "summarize",
+        "description": "Summarize the document in plain language for the user."
+      }
+    ],
+    "resources": [
+      {
+        "name": "policy",
+        "description": "Company policy document for internal reference.",
+        "uri": "file:///project/docs/policy.md"
+      }
+    ]
+  }
+}
