@@ -1,4 +1,4 @@
-import type { OwaspCategory, OwaspRef } from "./types.js";
+import type { OwaspCategory, OwaspRef } from "../scanner/types.js";
 
 const OWASP_BASE =
   "https://genai.owasp.org/resource/owasp-top-10-for-agentic-applications-for-2026/";

@@ -13,6 +13,24 @@ import {
   writeMarkdownReport,
 } from "./reports/json-reporter.js";
 import type { Severity } from "./scanner/types.js";
+import { runReplay } from "./replay/engine.js";
+import {
+  exitCodeForReplay,
+  printReplayReport,
+} from "./replay/reporters/terminal-reporter.js";
+import {
+  writeReplayJsonReport,
+  writeReplayMarkdownReport,
+} from "./replay/reporters/json-reporter.js";
+import { runMutation } from "./mutation/engine.js";
+import {
+  exitCodeForMutation,
+  printMutationReport,
+} from "./mutation/reporters/terminal-reporter.js";
+import {
+  writeMutationJsonReport,
+  writeMutationMarkdownReport,
+} from "./mutation/reporters/json-reporter.js";
 
 const program = new Command();
 
@@ -70,6 +88,93 @@ program
   .action(() => {
     for (const c of listChecks()) {
       console.log(`${c.id}\n  ${c.name}\n  ${c.description}\n`);
+    }
+  });
+
+program
+  .command("replay")
+  .description(
+    "Run attack corpus against an agent fixture in an isolated sandbox copy"
+  )
+  .argument("[path]", "Agent fixture directory (contains agent.json)", ".")
+  .option("-o, --output <file>", "Write JSON replay report to file")
+  .option("-m, --markdown <file>", "Write Markdown replay report to file")
+  .option("--corpus <file>", "Custom attack corpus JSON")
+  .option("--keep-sandbox", "Do not delete temp sandbox after replay")
+  .option("-q, --quiet", "Only print summary counts")
+  .action(async (path: string, opts) => {
+    try {
+      const abs = resolve(path);
+      const summary = runReplay(abs, {
+        corpusPath: opts.corpus,
+        keepSandbox: opts.keepSandbox,
+      });
+
+      if (!opts.quiet) {
+        printReplayReport(summary);
+      } else {
+        console.log(
+          JSON.stringify({
+            agent: summary.agentName,
+            attacks: summary.attacksRun,
+            exploited: summary.exploited,
+            blocked: summary.blocked,
+          })
+        );
+      }
+
+      if (opts.output) writeReplayJsonReport(summary, opts.output);
+      if (opts.markdown) writeReplayMarkdownReport(summary, opts.markdown);
+
+      process.exit(exitCodeForReplay(summary));
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exit(3);
+    }
+  });
+
+program
+  .command("mutate")
+  .description(
+    "Harden agent policies/prompt from replay failures, then re-run corpus for before/after score"
+  )
+  .argument("[path]", "Agent fixture directory (contains agent.json)", ".")
+  .option("-o, --output <file>", "Write JSON mutation report to file")
+  .option("-m, --markdown <file>", "Write Markdown mutation report to file")
+  .option("--corpus <file>", "Custom attack corpus JSON")
+  .option("--keep-sandbox", "Do not delete temp sandbox after mutation")
+  .option("--write-back", "Overwrite agent.json in the fixture directory")
+  .option("-q, --quiet", "Only print summary counts")
+  .action(async (path: string, opts) => {
+    try {
+      const abs = resolve(path);
+      const summary = runMutation(abs, {
+        corpusPath: opts.corpus,
+        keepSandbox: opts.keepSandbox,
+        writeBack: opts.writeBack,
+      });
+
+      if (!opts.quiet) {
+        printMutationReport(summary);
+      } else {
+        console.log(
+          JSON.stringify({
+            agent: summary.agentName,
+            before: summary.score.exploitRateBefore,
+            after: summary.score.exploitRateAfter,
+            mutations: summary.mutations.length,
+            exploitedDelta: summary.score.exploitedDelta,
+          })
+        );
+      }
+
+      if (opts.output) writeMutationJsonReport(summary, opts.output);
+      if (opts.markdown) writeMutationMarkdownReport(summary, opts.markdown);
+
+      process.exit(exitCodeForMutation(summary));
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exit(3);
     }
   });
 

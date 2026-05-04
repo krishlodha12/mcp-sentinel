@@ -81,8 +81,43 @@ Three fixtures — see `fixtures/CHECK_MATRIX.md`:
 npm test   # includes fixture contract tests
 ```
 
+### Replay harness (Phase 2)
+
+Run the attack corpus against an agent fixture (agent.json + MCP configs). Copies configs into an isolated temp sandbox, runs Phase 1 static scan, then replays 25 attacks (injection, jailbreak, exfiltration, multi-turn).
+
+```bash
+npm run replay -- fixtures/replay/vulnerable-agent
+npm run replay -- fixtures/replay/clean-agent --output replay.json
 ```
-src/scanner/checks/   one file per rule
+
+| Folder | Role |
+|--------|------|
+| `fixtures/replay/vulnerable-agent/` | Broken — high exploit rate (≥60%) |
+| `fixtures/replay/clean-agent/` | Clean — attacks blocked (≤15% exploit rate) |
+| `fixtures/replay/real-world/` | CVE-2025-6514 mcp-remote OAuth scenario |
+
+See `fixtures/REPLAY_MATRIX.md`.
+
+### Auto-mutation engine (Phase 3)
+
+Replay failures drive deterministic hardening of `agent.json` policies and system prompt, then the corpus runs again for a before/after exploit score.
+
+```bash
+npm run mutate -- fixtures/replay/vulnerable-agent
+npm run mutate -- fixtures/replay/clean-agent --output mutation.json
+```
+
+| Folder | Role |
+|--------|------|
+| `fixtures/replay/vulnerable-agent/` | Broken — high exploit rate drops after mutate |
+| `fixtures/replay/clean-agent/` | Clean — no policy/prompt changes |
+| `fixtures/replay/real-world/` | CVE-2025-6514 — partial fix (policy only) |
+
+See `fixtures/MUTATION_MATRIX.md`.
+
+```
+src/mutation/         planner, apply, before/after reports
+src/replay/           sandbox, corpus, evaluators, replay reports
 src/scanner/loaders/  parses config formats
 src/reports/          terminal + JSON + markdown output
 src/web/              local dashboard
@@ -91,13 +126,13 @@ fixtures/             intentional bad configs for demos/tests
 
 ## Roadmap (5-phase plan)
 
-This repo is **Phase 1** — static scanner. Later phases (not built yet):
-
-1. ✅ **MCP scanner** — you are here
-2. Sandbox replay harness — run attack corpus against a agent copy
-3. Auto-mutation engine — harden prompts, re-test, score before/after
-4. Decoy integration — route failed attacks into honeypot (AICON)
-5. Closed-loop attack twin — continuous multi-agent intel sharing
+| Phase | Status |
+|-------|--------|
+| 1. **MCP scanner** | Done — static config checks |
+| 2. **Sandbox replay harness** | Done — attack corpus + agent fixtures |
+| 3. **Auto-mutation engine** | Done — replay-driven agent hardening |
+| 4. Decoy integration (AICON) | Not started |
+| 5. Closed-loop attack twin | Long-term |
 
 See `CONTINUATION.md` for handoff notes if you're picking this up in a new chat.
 

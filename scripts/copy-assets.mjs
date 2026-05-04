@@ -10,3 +10,10 @@ if (existsSync(srcPublic)) {
   mkdirSync(distPublic, { recursive: true });
   cpSync(srcPublic, distPublic, { recursive: true });
 }
+
+const srcCorpus = join(root, "../src/replay/corpus");
+const distCorpus = join(root, "../dist/replay/corpus");
+if (existsSync(srcCorpus)) {
+  mkdirSync(distCorpus, { recursive: true });
+  cpSync(srcCorpus, distCorpus, { recursive: true });
+}

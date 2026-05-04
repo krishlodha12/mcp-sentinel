@@ -10,6 +10,8 @@
     "build": "tsc && node scripts/copy-assets.mjs",
     "dev": "tsx watch src/cli.ts",
     "scan": "tsx src/cli.ts scan",
+    "replay": "tsx src/cli.ts replay",
+    "mutate": "tsx src/cli.ts mutate",
     "ui": "tsx src/web/server.ts",
     "test": "vitest run",
     "test:watch": "vitest",

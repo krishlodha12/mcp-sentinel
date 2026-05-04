@@ -1,0 +1,23 @@
+{
+  "mcpServers": {
+    "filesystem": {
+      "command": "npx",
+      "args": [
+        "@modelcontextprotocol/server-filesystem@1.0.4",
+        "C:\\Users\\dev\\project-data"
+      ],
+      "env": {
+        "ALLOWED_DIRECTORIES": "C:\\Users\\dev\\project-data",
+        "BRAVE_API_KEY": "${BRAVE_API_KEY}"
+      }
+    },
+    "notes-helper": {
+      "command": "npx",
+      "args": ["@modelcontextprotocol/server-memory@1.0.0"],
+      "env": {}
+    },
+    "secure-remote": {
+      "url": "https://mcp.example.com/sse"
+    }
+  }
+}

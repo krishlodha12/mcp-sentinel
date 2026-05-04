@@ -1,80 +1,96 @@
 # Continuation notes — MCP Sentinel
 
-> Paste or reference this file when starting a new chat. Keeps context without burning tokens on re-explaining the whole roadmap.
+> **Agents:** read this file at the start of every session. Update it before ending any session with meaningful changes. See also `.cursor/rules/mcp-sentinel-session.mdc`.
 
-## What this project is
+## Project
 
-**MCP Sentinel** — Phase 1 of a 5-phase AI agent security toolchain. Static scanner for Model Context Protocol server configs. Catches tool poisoning, command injection surfaces, over-broad permissions, unpinned packages, secrets in config. Maps findings to OWASP Agentic Top 10 (2026).
+**MCP Sentinel** — static security scanner for MCP configs (tool poisoning, injection, permissions, supply chain). Maps to OWASP Agentic Top 10 (2026).
 
-Location: `mcp-sentinel/` in this workspace.
+- **Path:** `mcp-sentinel/`
+- **Repo:** https://github.com/krishlodha12/mcp-sentinel (private)
 
-## What's done (Phase 1)
+## Phase status
 
-- [x] TypeScript CLI (`src/cli.ts`) — `scan`, `checks` commands
-- [x] 10 security checks in `src/scanner/checks/`
-- [x] Config loaders for mcp.json, server.json, tools.json
-- [x] OWASP ASI01–ASI10 mapping
-- [x] Terminal, JSON, Markdown reporters
-- [x] Web UI (`npm run ui`) — drag/drop, paste, demo scan, explain buttons
-- [x] Three-fixture validation (broken / clean / real-world) — `fixtures/CHECK_MATRIX.md`
-- [x] Real-world case: CVE-2025-6514 (Vulnerable MCP Project)
-- [x] Fixture contract tests in `tests/fixtures.test.ts`
-- [x] Vitest suite in `tests/scanner.test.ts`
+| Phase | Status |
+|-------|--------|
+| 1 — MCP scanner | **Done** |
+| 2 — Sandbox replay harness | **Done** |
+| 3 — Auto-mutation engine | **Done** |
+| 4 — Decoy / AICON | Not started |
+| 5 — Closed-loop twin | Long-term |
 
-## Commands you'll use
+## Phase 1 — done (verified)
+
+- [x] CLI (`src/cli.ts`) + web UI (`npm run ui`)
+- [x] 10 checks in `src/scanner/checks/`
+- [x] Loaders: mcp.json, server.json, tools.json
+- [x] OWASP mapping, terminal/JSON/markdown reports
+- [x] Three fixtures + `fixtures/CHECK_MATRIX.md`
+- [x] Real-world: CVE-2025-6514 (`fixtures/real-world/`)
+- [x] Tests: `tests/fixtures.test.ts`, `tests/scanner.test.ts` — **12/12 passing**
+- [x] GitHub pushed
+- [x] Windows: `setup.ps1`, `run.ps1`
+
+## Phase 2 — done (verified)
+
+- [x] `replay` CLI command — `npm run replay -- fixtures/replay/vulnerable-agent`
+- [x] Attack corpus: `src/replay/corpus/attacks.json` (25 attacks)
+- [x] Sandbox copy to temp dir + Phase 1 static scan bundled in report
+- [x] Deterministic evaluators: `src/replay/evaluators/conditions.ts`
+- [x] Replay reporters (terminal + JSON + markdown)
+- [x] Three fixtures + `fixtures/REPLAY_MATRIX.md`
+- [x] Tests: `tests/replay.test.ts` — **22/22 total tests passing**
+
+Optional polish (not blocking): Docker subprocess spawn for live MCP servers, replay tab in web UI.
+
+## Phase 3 — done (verified)
+
+- [x] `mutate` CLI command — `npm run mutate -- fixtures/replay/vulnerable-agent`
+- [x] Mutation planner from replay exploit evidence (`src/mutation/planner.ts`)
+- [x] Policy + system-prompt hardening (`src/mutation/apply.ts`)
+- [x] Before/after replay score (`src/mutation/engine.ts`)
+- [x] Mutation reporters (terminal + JSON + markdown)
+- [x] Reuses Phase 2 replay fixtures + `fixtures/MUTATION_MATRIX.md`
+- [x] Tests: `tests/mutation.test.ts` — extends total test count
+
+Agent-only mutations. MCP config fixes emitted as recommendations; full config auto-repair is future work.
+
+## Phase 4 — next (when user asks)
+
+Decoy / AICON integration.
+
+## Architecture (don't re-litigate)
+
+- Node/TypeScript, ESM
+- Checks implement `SecurityCheck`, registered in `src/scanner/checks/index.ts`
+- Replay: `AgentConfig` + MCP paths → sandbox → corpus → `ReplaySummary` (includes `ScanSummary`)
+- Mutation: replay → plan → harden `agent.json` → replay → `MutationSummary` with before/after
+- Every finding has `explanation` + `remediation` for UI/resume
+
+## Read first
+
+1. `README.md`
+2. `fixtures/CHECK_MATRIX.md` + `fixtures/REPLAY_MATRIX.md` + `fixtures/MUTATION_MATRIX.md`
+3. `src/scanner/engine.ts`
+4. `src/replay/engine.ts`
+5. `src/mutation/engine.ts`
+
+## Commands
 
 ```bash
 cd mcp-sentinel
-npm install
 npm test
 npm run scan -- fixtures/vulnerable-setup
+npm run replay -- fixtures/replay/vulnerable-agent
+npm run replay -- fixtures/replay/clean-agent
+npm run mutate -- fixtures/replay/vulnerable-agent
 npm run ui
-npm run build
 ```
 
-## Phase 2 — next up (NOT started)
+## Session log (update me)
 
-**Sandbox replay harness.** Take an agent's MCP config, spin up isolated copy, run corpus of jailbreaks/prompt injections/multi-turn attacks, log pass/fail per attack. Output = vulnerability report *with evidence*, not just static flags.
-
-Suggested approach when ready:
-- Docker or subprocess sandbox per server
-- Attack corpus as YAML/JSON (start with 20–30 public prompts)
-- Hook into existing scanner for pre/post comparison
-- Reuse `ScanSummary` type for unified reporting
-
-## Phase 3 — auto-mutation engine (NOT started)
-
-For each successful Phase 2 attack: auto-propose hardened system prompt + tighter tool permissions, re-run corpus, report before/after pass rate ("confidence score").
-
-## Phase 4 — decoy / AICON integration (NOT started)
-
-Route failed attacks into honeypot environment; real system gets Phase 3 hardening.
-
-## Phase 5 — closed-loop twin (long-term)
-
-Continuous phases 1–4 across agents/tenants with shared threat intel.
-
-## Architecture decisions (don't re-litigate unless broken)
-
-- **Node/TS** — matches MCP ecosystem, easy CLI + web
-- **Static first** — no agent runtime required for Phase 1
-- **Checks are pluggable** — implement `SecurityCheck` interface, add to `ALL_CHECKS`
-- **Human-readable explanations** — every finding has `explanation` + `remediation` for UI and resume demos
-
-## Files to read first in a new session
-
-1. `README.md` — user-facing docs
-2. `src/scanner/checks/index.ts` — check registry
-3. `src/scanner/engine.ts` — orchestration
-4. `fixtures/vulnerable-setup/server.json` — demo payload
-
-## GitHub / resume checklist
-
-- [ ] Push to GitHub (user hasn't asked to commit yet)
-- [ ] Add real GitHub URL to web UI link in `index.html`
-- [ ] Blog post or README screenshot of UI on vulnerable fixture
-- [ ] Optional: GitHub Action that runs `npm test && npm run scan -- fixtures/`
-
-## Token budget note
-
-This file exists so new chats can `@CONTINUATION.md` instead of re-reading the full roadmap conversation. Target ~70% of context for implementation work, ~30% for orientation.
+| Date | What happened | Next |
+|------|---------------|------|
+| 2026-06-14 | Phase 1 built, three-fixture validation, CVE-2025-6514, pushed to GitHub | Phase 2 sandbox harness when ready |
+| 2026-06-14 | Phase 2 replay harness: corpus, sandbox, evaluators, CLI, three fixtures, 22 tests green | Phase 3 auto-mutation when ready |
+| 2026-06-14 | Phase 3 mutation engine: planner, apply, mutate CLI, MUTATION_MATRIX, mutation tests | Phase 4 decoy/AICON when ready |
