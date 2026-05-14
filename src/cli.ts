@@ -31,6 +31,15 @@ import {
   writeMutationJsonReport,
   writeMutationMarkdownReport,
 } from "./mutation/reporters/json-reporter.js";
+import { runDecoy } from "./decoy/engine.js";
+import {
+  exitCodeForDecoy,
+  printDecoyReport,
+} from "./decoy/reporters/terminal-reporter.js";
+import {
+  writeDecoyJsonReport,
+  writeDecoyMarkdownReport,
+} from "./decoy/reporters/json-reporter.js";
 
 const program = new Command();
 
@@ -172,6 +181,53 @@ program
       if (opts.markdown) writeMutationMarkdownReport(summary, opts.markdown);
 
       process.exit(exitCodeForMutation(summary));
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exit(3);
+    }
+  });
+
+program
+  .command("decoy")
+  .description(
+    "AICON decoy routing — shunt exploited attacks to ghost tools while hardening the real agent path"
+  )
+  .argument("[path]", "Agent fixture directory (contains agent.json)", ".")
+  .option("-o, --output <file>", "Write JSON decoy report to file")
+  .option("-m, --markdown <file>", "Write Markdown decoy report to file")
+  .option("--corpus <file>", "Custom attack corpus JSON")
+  .option("--catalog <file>", "Custom ghost-tool catalog JSON")
+  .option("--keep-sandbox", "Do not delete temp sandboxes after decoy run")
+  .option("--write-back", "Overwrite agent.json in the fixture directory")
+  .option("-q, --quiet", "Only print summary counts")
+  .action(async (path: string, opts) => {
+    try {
+      const abs = resolve(path);
+      const summary = runDecoy(abs, {
+        corpusPath: opts.corpus,
+        catalogPath: opts.catalog,
+        keepSandbox: opts.keepSandbox,
+        writeBack: opts.writeBack,
+      });
+
+      if (!opts.quiet) {
+        printDecoyReport(summary);
+      } else {
+        console.log(
+          JSON.stringify({
+            agent: summary.agentName,
+            routed: summary.score.attacksRouted,
+            triggers: summary.score.detections,
+            realBefore: summary.score.realExploitRateBefore,
+            realAfter: summary.score.realExploitRateAfter,
+          })
+        );
+      }
+
+      if (opts.output) writeDecoyJsonReport(summary, opts.output);
+      if (opts.markdown) writeDecoyMarkdownReport(summary, opts.markdown);
+
+      process.exit(exitCodeForDecoy(summary));
     } catch (err) {
       console.error(err instanceof Error ? err.message : err);
       process.exit(3);

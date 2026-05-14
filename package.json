@@ -12,6 +12,7 @@
     "scan": "tsx src/cli.ts scan",
     "replay": "tsx src/cli.ts replay",
     "mutate": "tsx src/cli.ts mutate",
+    "decoy": "tsx src/cli.ts decoy",
     "ui": "tsx src/web/server.ts",
     "test": "vitest run",
     "test:watch": "vitest",

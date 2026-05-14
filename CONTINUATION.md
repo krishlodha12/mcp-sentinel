@@ -16,7 +16,7 @@
 | 1 — MCP scanner | **Done** |
 | 2 — Sandbox replay harness | **Done** |
 | 3 — Auto-mutation engine | **Done** |
-| 4 — Decoy / AICON | Not started |
+| 4 — Decoy / AICON | **Done** |
 | 5 — Closed-loop twin | Long-term |
 
 ## Phase 1 — done (verified)
@@ -55,9 +55,19 @@ Optional polish (not blocking): Docker subprocess spawn for live MCP servers, re
 
 Agent-only mutations. MCP config fixes emitted as recommendations; full config auto-repair is future work.
 
-## Phase 4 — next (when user asks)
+## Phase 4 — done (verified)
 
-Decoy / AICON integration.
+- [x] `decoy` CLI command — `npm run decoy -- fixtures/replay/vulnerable-agent`
+- [x] Ghost-tool catalog (`src/decoy/catalog.json`) — get/set/execute honeypots
+- [x] AICON routing: exploited attacks → decoy sandbox; real path → Phase 3 harden
+- [x] Decoy reporters (terminal + JSON + markdown)
+- [x] Reuses Phase 2 replay fixtures + `fixtures/DECOY_MATRIX.md`
+- [x] Real-world doc: `fixtures/decoy/real-world/README.md` (Zeltser / mcp-decoy pattern)
+- [x] Tests: `tests/decoy.test.ts` — **49/49 total tests passing**
+
+Deterministic routing simulation — no live MCP honeypot server required.
+
+## Phase 5 — long-term
 
 ## Architecture (don't re-litigate)
 
@@ -65,15 +75,16 @@ Decoy / AICON integration.
 - Checks implement `SecurityCheck`, registered in `src/scanner/checks/index.ts`
 - Replay: `AgentConfig` + MCP paths → sandbox → corpus → `ReplaySummary` (includes `ScanSummary`)
 - Mutation: replay → plan → harden `agent.json` → replay → `MutationSummary` with before/after
+- Decoy: replay → route exploits to ghost tools (AICON) → harden real path → `DecoySummary` dual-path
 - Every finding has `explanation` + `remediation` for UI/resume
 
 ## Read first
 
 1. `README.md`
-2. `fixtures/CHECK_MATRIX.md` + `fixtures/REPLAY_MATRIX.md` + `fixtures/MUTATION_MATRIX.md`
+2. `fixtures/CHECK_MATRIX.md` + `fixtures/REPLAY_MATRIX.md` + `fixtures/MUTATION_MATRIX.md` + `fixtures/DECOY_MATRIX.md`
 3. `src/scanner/engine.ts`
-4. `src/replay/engine.ts`
-5. `src/mutation/engine.ts`
+4. `src/mutation/engine.ts`
+5. `src/decoy/engine.ts`
 
 ## Commands
 
@@ -84,6 +95,7 @@ npm run scan -- fixtures/vulnerable-setup
 npm run replay -- fixtures/replay/vulnerable-agent
 npm run replay -- fixtures/replay/clean-agent
 npm run mutate -- fixtures/replay/vulnerable-agent
+npm run decoy -- fixtures/replay/vulnerable-agent
 npm run ui
 ```
 
@@ -94,3 +106,4 @@ npm run ui
 | 2026-06-14 | Phase 1 built, three-fixture validation, CVE-2025-6514, pushed to GitHub | Phase 2 sandbox harness when ready |
 | 2026-06-14 | Phase 2 replay harness: corpus, sandbox, evaluators, CLI, three fixtures, 22 tests green | Phase 3 auto-mutation when ready |
 | 2026-06-14 | Phase 3 mutation engine: planner, apply, mutate CLI, MUTATION_MATRIX, mutation tests | Phase 4 decoy/AICON when ready |
+| 2026-06-14 | Phase 4 AICON decoy: ghost catalog, router, decoy CLI, DECOY_MATRIX, 49 tests green | Phase 5 closed-loop twin (long-term) |

@@ -40,3 +40,18 @@ export {
   writeMutationJsonReport,
   writeMutationMarkdownReport,
 } from "./mutation/reporters/json-reporter.js";
+export { runDecoy } from "./decoy/engine.js";
+export type {
+  DecoySummary,
+  DecoyDetection,
+  GhostTool,
+  DecoyOptions,
+} from "./decoy/types.js";
+export {
+  printDecoyReport,
+  exitCodeForDecoy,
+} from "./decoy/reporters/terminal-reporter.js";
+export {
+  writeDecoyJsonReport,
+  writeDecoyMarkdownReport,
+} from "./decoy/reporters/json-reporter.js";

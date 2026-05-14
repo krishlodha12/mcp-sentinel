@@ -5,3 +5,6 @@ dist/
 coverage/
 .env
 uploads/
+decoy.json
+replay.json
+mutation.json

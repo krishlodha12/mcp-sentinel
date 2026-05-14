@@ -115,7 +115,25 @@ npm run mutate -- fixtures/replay/clean-agent --output mutation.json
 
 See `fixtures/MUTATION_MATRIX.md`.
 
+### AICON decoy routing (Phase 4)
+
+Exploited attacks get shunted to a decoy MCP surface with ghost tools while the real agent path receives Phase 3 hardening. Dual-path report: decoy detections + real before/after score.
+
+```bash
+npm run decoy -- fixtures/replay/vulnerable-agent
+npm run decoy -- fixtures/replay/clean-agent --output decoy.json
 ```
+
+| Folder | Role |
+|--------|------|
+| `fixtures/replay/vulnerable-agent/` | Broken — 100% decoy catch + real hardens |
+| `fixtures/replay/clean-agent/` | Clean — minimal routing, no false triggers |
+| `fixtures/replay/real-world/` | Documented honeypot pattern + CVE partial fix |
+
+See `fixtures/DECOY_MATRIX.md` and `fixtures/decoy/real-world/README.md`.
+
+```
+src/decoy/            AICON catalog, ghost tools, routing, reports
 src/mutation/         planner, apply, before/after reports
 src/replay/           sandbox, corpus, evaluators, replay reports
 src/scanner/loaders/  parses config formats
@@ -131,7 +149,7 @@ fixtures/             intentional bad configs for demos/tests
 | 1. **MCP scanner** | Done — static config checks |
 | 2. **Sandbox replay harness** | Done — attack corpus + agent fixtures |
 | 3. **Auto-mutation engine** | Done — replay-driven agent hardening |
-| 4. Decoy integration (AICON) | Not started |
+| 4. **AICON decoy routing** | Done — ghost tools + dual-path report |
 | 5. Closed-loop attack twin | Long-term |
 
 See `CONTINUATION.md` for handoff notes if you're picking this up in a new chat.
