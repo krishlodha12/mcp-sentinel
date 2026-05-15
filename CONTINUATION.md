@@ -64,6 +64,7 @@ Agent-only mutations. MCP config fixes emitted as recommendations; full config a
 - [x] Reuses Phase 2 replay fixtures + `fixtures/DECOY_MATRIX.md`
 - [x] Real-world doc: `fixtures/decoy/real-world/README.md` (Zeltser / mcp-decoy pattern)
 - [x] Tests: `tests/decoy.test.ts` — **49/49 total tests passing**
+- [x] GitHub pushed (Phases 1–4 on `main`)
 
 Deterministic routing simulation — no live MCP honeypot server required.
 
