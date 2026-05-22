@@ -1,0 +1,8 @@
+{
+  "name": "twin/real-world-fleet",
+  "description": "CVE gateway publishes remote exploit intel; observer twin stays hardened",
+  "agents": [
+    { "id": "gateway", "path": "./gateway", "role": "gateway" },
+    { "id": "observer", "path": "./observer", "role": "observer" }
+  ]
+}

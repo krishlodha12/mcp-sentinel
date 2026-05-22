@@ -17,7 +17,7 @@
 | 2 — Sandbox replay harness | **Done** |
 | 3 — Auto-mutation engine | **Done** |
 | 4 — Decoy / AICON | **Done** |
-| 5 — Closed-loop twin | Long-term |
+| 5 — Closed-loop twin | **Done** |
 
 ## Phase 1 — done (verified)
 
@@ -68,7 +68,19 @@ Agent-only mutations. MCP config fixes emitted as recommendations; full config a
 
 Deterministic routing simulation — no live MCP honeypot server required.
 
-## Phase 5 — long-term
+## Phase 5 — done (verified)
+
+- [x] `twin` CLI command — `npm run twin -- fixtures/twin/vulnerable-fleet`
+- [x] Fleet loader (`fleet.json`) + intel ledger (`src/twin/intel.ts`)
+- [x] Closed loop: probe → intel bus → cross-harden → fleet decoy → verify
+- [x] Reuses Phase 2 corpus, Phase 3 mutations, Phase 4 decoy catalog
+- [x] Three fixtures + `fixtures/TWIN_MATRIX.md`
+- [x] Real-world doc: `fixtures/twin/real-world-fleet/README.md` (SOC fleet intel pattern)
+- [x] Tests: `tests/twin.test.ts` — **66/66 total tests passing**
+- [x] Manual verify: `npx tsx src/cli.ts twin fixtures/twin/real-world-fleet --output twin.json`
+- [x] GitHub pushed (Phases 1–5 on `main`)
+
+Deterministic multi-agent simulation — no live intel bus or external fleet runtime required.
 
 ## Architecture (don't re-litigate)
 
@@ -77,15 +89,17 @@ Deterministic routing simulation — no live MCP honeypot server required.
 - Replay: `AgentConfig` + MCP paths → sandbox → corpus → `ReplaySummary` (includes `ScanSummary`)
 - Mutation: replay → plan → harden `agent.json` → replay → `MutationSummary` with before/after
 - Decoy: replay → route exploits to ghost tools (AICON) → harden real path → `DecoySummary` dual-path
+- Twin: fleet probe → intel ledger → cross-harden + fleet decoy → verify → `TwinSummary` fleet score
 - Every finding has `explanation` + `remediation` for UI/resume
 
 ## Read first
 
 1. `README.md`
-2. `fixtures/CHECK_MATRIX.md` + `fixtures/REPLAY_MATRIX.md` + `fixtures/MUTATION_MATRIX.md` + `fixtures/DECOY_MATRIX.md`
+2. `fixtures/CHECK_MATRIX.md` + `fixtures/REPLAY_MATRIX.md` + `fixtures/MUTATION_MATRIX.md` + `fixtures/DECOY_MATRIX.md` + `fixtures/TWIN_MATRIX.md`
 3. `src/scanner/engine.ts`
 4. `src/mutation/engine.ts`
 5. `src/decoy/engine.ts`
+6. `src/twin/engine.ts`
 
 ## Commands
 
@@ -97,6 +111,7 @@ npm run replay -- fixtures/replay/vulnerable-agent
 npm run replay -- fixtures/replay/clean-agent
 npm run mutate -- fixtures/replay/vulnerable-agent
 npm run decoy -- fixtures/replay/vulnerable-agent
+npm run twin -- fixtures/twin/vulnerable-fleet
 npm run ui
 ```
 
@@ -108,3 +123,4 @@ npm run ui
 | 2026-06-14 | Phase 2 replay harness: corpus, sandbox, evaluators, CLI, three fixtures, 22 tests green | Phase 3 auto-mutation when ready |
 | 2026-06-14 | Phase 3 mutation engine: planner, apply, mutate CLI, MUTATION_MATRIX, mutation tests | Phase 4 decoy/AICON when ready |
 | 2026-06-14 | Phase 4 AICON decoy: ghost catalog, router, decoy CLI, DECOY_MATRIX, 49 tests green | Phase 5 closed-loop twin (long-term) |
+| 2026-06-14 | Phase 5 attack twin: fleet loader, intel ledger, twin CLI, TWIN_MATRIX, 66 tests green, pushed to GitHub | Optional polish: replay/twin UI tabs, live MCP spawn |

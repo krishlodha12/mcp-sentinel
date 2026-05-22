@@ -1,0 +1,8 @@
+{
+  "name": "twin/clean-fleet",
+  "description": "Two hardened agents — minimal intel noise, closed loop is a no-op",
+  "agents": [
+    { "id": "primary", "path": "./primary", "role": "probe" },
+    { "id": "secondary", "path": "./secondary", "role": "worker" }
+  ]
+}

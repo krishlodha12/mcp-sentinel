@@ -13,6 +13,7 @@
     "replay": "tsx src/cli.ts replay",
     "mutate": "tsx src/cli.ts mutate",
     "decoy": "tsx src/cli.ts decoy",
+    "twin": "tsx src/cli.ts twin",
     "ui": "tsx src/web/server.ts",
     "test": "vitest run",
     "test:watch": "vitest",

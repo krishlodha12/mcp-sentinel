@@ -40,6 +40,15 @@ import {
   writeDecoyJsonReport,
   writeDecoyMarkdownReport,
 } from "./decoy/reporters/json-reporter.js";
+import { runTwin } from "./twin/engine.js";
+import {
+  printTwinReport,
+  exitCodeForTwin,
+} from "./twin/reporters/terminal-reporter.js";
+import {
+  writeTwinJsonReport,
+  writeTwinMarkdownReport,
+} from "./twin/reporters/json-reporter.js";
 
 const program = new Command();
 
@@ -228,6 +237,54 @@ program
       if (opts.markdown) writeDecoyMarkdownReport(summary, opts.markdown);
 
       process.exit(exitCodeForDecoy(summary));
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exit(3);
+    }
+  });
+
+program
+  .command("twin")
+  .description(
+    "Closed-loop attack twin — multi-agent probe, intel sharing, cross-harden, fleet decoy, verify"
+  )
+  .argument("[path]", "Fleet fixture directory (contains fleet.json)", ".")
+  .option("-o, --output <file>", "Write JSON twin report to file")
+  .option("-m, --markdown <file>", "Write Markdown twin report to file")
+  .option("--corpus <file>", "Custom attack corpus JSON")
+  .option("--catalog <file>", "Custom ghost-tool catalog JSON")
+  .option("--keep-sandbox", "Do not delete temp sandboxes after twin run")
+  .option("--write-back", "Overwrite agent.json in fleet fixture directories")
+  .option("-q, --quiet", "Only print summary counts")
+  .action(async (path: string, opts) => {
+    try {
+      const abs = resolve(path);
+      const summary = runTwin(abs, {
+        corpusPath: opts.corpus,
+        catalogPath: opts.catalog,
+        keepSandbox: opts.keepSandbox,
+        writeBack: opts.writeBack,
+      });
+
+      if (!opts.quiet) {
+        printTwinReport(summary);
+      } else {
+        console.log(
+          JSON.stringify({
+            fleet: summary.fleetName,
+            before: summary.score.fleetExploitRateBefore,
+            after: summary.score.fleetExploitRateAfter,
+            intel: summary.score.intelEntries,
+            watchlist: summary.score.watchlistSize,
+            decoy: summary.score.decoyDetections,
+          })
+        );
+      }
+
+      if (opts.output) writeTwinJsonReport(summary, opts.output);
+      if (opts.markdown) writeTwinMarkdownReport(summary, opts.markdown);
+
+      process.exit(exitCodeForTwin(summary));
     } catch (err) {
       console.error(err instanceof Error ? err.message : err);
       process.exit(3);

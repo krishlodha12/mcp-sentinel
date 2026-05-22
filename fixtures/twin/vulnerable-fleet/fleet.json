@@ -1,0 +1,8 @@
+{
+  "name": "twin/vulnerable-fleet",
+  "description": "Scout probes first; worker shares MCP surface but blocks shell — fleet intel drives cross-hardening",
+  "agents": [
+    { "id": "scout", "path": "./scout", "role": "probe" },
+    { "id": "worker", "path": "./worker", "role": "worker" }
+  ]
+}

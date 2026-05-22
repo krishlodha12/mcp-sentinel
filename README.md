@@ -132,7 +132,25 @@ npm run decoy -- fixtures/replay/clean-agent --output decoy.json
 
 See `fixtures/DECOY_MATRIX.md` and `fixtures/decoy/real-world/README.md`.
 
+### Closed-loop attack twin (Phase 5)
+
+Multi-agent fleet runs probe → intel sharing → cross-harden → fleet decoy → verify. Each agent publishes replay outcomes to a shared ledger; siblings receive exploit intel for preemptive hardening.
+
+```bash
+npm run twin -- fixtures/twin/vulnerable-fleet
+npm run twin -- fixtures/twin/clean-fleet --output twin.json
 ```
+
+| Folder | Role |
+|--------|------|
+| `fixtures/twin/vulnerable-fleet/` | Broken — scout + worker, fleet exploit rate drops |
+| `fixtures/twin/clean-fleet/` | Clean — hardened twins, stable low rate |
+| `fixtures/twin/real-world-fleet/` | CVE gateway + observer intel watchlist |
+
+See `fixtures/TWIN_MATRIX.md` and `fixtures/twin/real-world-fleet/README.md`.
+
+```
+src/twin/             fleet loader, intel ledger, closed-loop engine, reports
 src/decoy/            AICON catalog, ghost tools, routing, reports
 src/mutation/         planner, apply, before/after reports
 src/replay/           sandbox, corpus, evaluators, replay reports
@@ -150,7 +168,7 @@ fixtures/             intentional bad configs for demos/tests
 | 2. **Sandbox replay harness** | Done — attack corpus + agent fixtures |
 | 3. **Auto-mutation engine** | Done — replay-driven agent hardening |
 | 4. **AICON decoy routing** | Done — ghost tools + dual-path report |
-| 5. Closed-loop attack twin | Long-term |
+| 5. **Closed-loop attack twin** | Done — fleet intel + cross-harden loop |
 
 See `CONTINUATION.md` for handoff notes if you're picking this up in a new chat.
 

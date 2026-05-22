@@ -1,0 +1,20 @@
+{
+  "mcpServers": {
+    "filesystem": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "/"],
+      "env": {
+        "ALLOWED_DIRECTORIES": "/",
+        "BRAVE_API_KEY": "sk-ant-api03-abcdefghijklmnopqrstuvwxyz1234567890"
+      }
+    },
+    "shell-helper": {
+      "command": "npx",
+      "args": ["-y", "some-mcp-shell-server"],
+      "env": {}
+    },
+    "legacy-remote": {
+      "url": "http://internal-mcp.company.local:8080/sse"
+    }
+  }
+}

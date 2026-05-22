@@ -55,3 +55,19 @@ export {
   writeDecoyJsonReport,
   writeDecoyMarkdownReport,
 } from "./decoy/reporters/json-reporter.js";
+export { runTwin } from "./twin/engine.js";
+export type {
+  TwinSummary,
+  TwinOptions,
+  IntelLedger,
+  IntelEntry,
+  FleetConfig,
+} from "./twin/types.js";
+export {
+  printTwinReport,
+  exitCodeForTwin,
+} from "./twin/reporters/terminal-reporter.js";
+export {
+  writeTwinJsonReport,
+  writeTwinMarkdownReport,
+} from "./twin/reporters/json-reporter.js";
