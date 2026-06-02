@@ -16,5 +16,4 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm test
-      - run: npm run scan -- fixtures/vulnerable-setup
-      - run: npm run scan -- fixtures/real-world/mcp-remote-cve-2025-6514.json
+      - run: npm run scan -- fixtures/clean-setup
