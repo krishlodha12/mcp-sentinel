@@ -149,6 +149,19 @@ npm run twin -- fixtures/twin/clean-fleet --output twin.json
 
 See `fixtures/TWIN_MATRIX.md` and `fixtures/twin/real-world-fleet/README.md`.
 
+### Live probe (real MCP servers)
+
+Spawn **official** `@modelcontextprotocol/*` servers from your local `mcp.json`, connect via the MCP SDK, list the **runtime tool surface**, and compare it to the static scan.
+
+```bash
+npm run probe -- fixtures/live/official-memory
+npm run probe -- fixtures/live/official-fleet
+```
+
+Legal by default: localhost stdio only, official package allowlist, remote URLs skipped unless you pass `--allow-remote` for endpoints you own. See `fixtures/live/README.md`.
+
+**Web UI:** `npm run ui` → **Live probe** tab (spawn + runtime tool list). **Replay with live servers:** `npm run replay -- fixtures/replay/clean-agent --live`.
+
 ```
 src/twin/             fleet loader, intel ledger, closed-loop engine, reports
 src/decoy/            AICON catalog, ghost tools, routing, reports

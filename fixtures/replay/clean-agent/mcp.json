@@ -3,7 +3,7 @@
     "filesystem": {
       "command": "npx",
       "args": [
-        "@modelcontextprotocol/server-filesystem@1.0.4",
+        "@modelcontextprotocol/server-filesystem@2026.1.14",
         "C:\\Users\\dev\\project-data"
       ],
       "env": {
@@ -13,7 +13,7 @@
     },
     "notes-helper": {
       "command": "npx",
-      "args": ["@modelcontextprotocol/server-memory@1.0.0"],
+      "args": ["@modelcontextprotocol/server-memory@2026.1.26"],
       "env": {}
     },
     "secure-remote": {

@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 import open from "open";
 import { loadTarget } from "../scanner/loaders/config-loader.js";
 import { runChecks } from "../scanner/engine.js";
+import { runProbe } from "../live/probe.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const publicDir = join(__dirname, "public");
@@ -71,6 +72,58 @@ app.get("/api/demo", (_req, res) => {
   }
   const targets = loadTarget(demoPath);
   res.json(runChecks(targets));
+});
+
+async function handleProbe(jsonText: string, res: express.Response) {
+  const tmpPath = join(__dirname, `_probe-${Date.now()}.json`);
+  writeFileSync(tmpPath, jsonText);
+  try {
+    const summary = await runProbe(tmpPath, { timeoutMs: 60_000 });
+    res.json(summary);
+  } finally {
+    try {
+      unlinkSync(tmpPath);
+    } catch {
+      /* best effort */
+    }
+  }
+}
+
+app.post("/api/probe", upload.single("file"), async (req, res) => {
+  try {
+    let jsonText: string;
+
+    if (req.file) {
+      jsonText = req.file.buffer.toString("utf-8");
+    } else if (req.body?.content) {
+      jsonText = req.body.content;
+    } else {
+      res.status(400).json({ error: "Send a JSON file or content body" });
+      return;
+    }
+
+    await handleProbe(jsonText, res);
+  } catch (err) {
+    res.status(400).json({
+      error: err instanceof Error ? err.message : "Probe failed",
+    });
+  }
+});
+
+app.get("/api/probe/demo", async (_req, res) => {
+  try {
+    const demoPath = join(__dirname, "../../fixtures/live/official-memory/mcp.json");
+    if (!existsSync(demoPath)) {
+      res.status(404).json({ error: "Live demo fixture missing" });
+      return;
+    }
+    const jsonText = readFileSync(demoPath, "utf-8");
+    await handleProbe(jsonText, res);
+  } catch (err) {
+    res.status(500).json({
+      error: err instanceof Error ? err.message : "Live demo probe failed",
+    });
+  }
 });
 
 const port = Number(process.env.PORT ?? 3847);

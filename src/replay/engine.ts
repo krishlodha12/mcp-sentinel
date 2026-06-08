@@ -11,6 +11,7 @@ import type {
   SandboxSession,
 } from "./types.js";
 import { createSandbox, discoverAgentFixture } from "./sandbox.js";
+import { enrichSandboxLive } from "./live-enrich.js";
 import { attackExploited } from "./evaluators/conditions.js";
 
 const DEFAULT_CORPUS = join(
@@ -90,17 +91,29 @@ export function runReplayOnSandbox(
   };
 }
 
-export function runReplay(
+export async function runReplay(
   agentFixturePath: string,
   options: ReplayOptions = {}
-): ReplaySummary {
+): Promise<ReplaySummary> {
   const start = Date.now();
   const agentDir = discoverAgentFixture(agentFixturePath);
   const corpus = loadCorpus(options.corpusPath);
   const sandbox = createSandbox(agentDir);
 
   try {
-    return runReplayOnSandbox(sandbox, corpus, start);
+    let liveProbe;
+    if (options.live) {
+      const enriched = await enrichSandboxLive(sandbox, options.liveProbeOptions);
+      liveProbe = {
+        enabled: true,
+        servers: enriched.servers,
+        liveToolsMerged: enriched.liveToolsMerged,
+        probeDurationMs: enriched.probeDurationMs,
+      };
+    }
+
+    const summary = runReplayOnSandbox(sandbox, corpus, start);
+    return liveProbe ? { ...summary, liveProbe } : summary;
   } finally {
     if (!options.keepSandbox) {
       sandbox.cleanup();

@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "shell-helper": {
+      "command": "npx",
+      "args": ["-y", "some-mcp-shell-server"],
+      "env": {}
+    },
+    "legacy-remote": {
+      "url": "http://internal-mcp.company.local:8080/sse"
+    }
+  }
+}

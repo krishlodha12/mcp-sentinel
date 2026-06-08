@@ -41,7 +41,7 @@
 - [x] Three fixtures + `fixtures/REPLAY_MATRIX.md`
 - [x] Tests: `tests/replay.test.ts` — **22/22 total tests passing**
 
-Optional polish (not blocking): Docker subprocess spawn for live MCP servers, replay tab in web UI.
+Optional polish (not blocking): remote SSE probe, replay tab in web UI.
 
 ## Phase 3 — done (verified)
 
@@ -112,6 +112,8 @@ npm run replay -- fixtures/replay/clean-agent
 npm run mutate -- fixtures/replay/vulnerable-agent
 npm run decoy -- fixtures/replay/vulnerable-agent
 npm run twin -- fixtures/twin/vulnerable-fleet
+npm run probe -- fixtures/live/official-memory
+npm run replay -- fixtures/replay/clean-agent --live
 npm run ui
 ```
 
@@ -124,3 +126,6 @@ npm run ui
 | 2026-06-14 | Phase 3 mutation engine: planner, apply, mutate CLI, MUTATION_MATRIX, mutation tests | Phase 4 decoy/AICON when ready |
 | 2026-06-14 | Phase 4 AICON decoy: ghost catalog, router, decoy CLI, DECOY_MATRIX, 49 tests green | Phase 5 closed-loop twin (long-term) |
 | 2026-06-14 | Phase 5 attack twin: fleet loader, intel ledger, twin CLI, TWIN_MATRIX, 66 tests green, pushed to GitHub | Optional polish: replay/twin UI tabs, live MCP spawn |
+| 2026-06-14 | **Live probe** (`probe` CLI): spawns official `@modelcontextprotocol/*` servers via MCP SDK, lists runtime tools, drift vs static scan. Fixtures in `fixtures/live/`. Verified memory + filesystem on Windows. 72 tests green. | Optional: remote SSE probe, probe tab in web UI |
+| 2026-06-14 | **Live probe UI tab** + `/api/probe` endpoints. **Replay `--live`** merges runtime tools before attack corpus. 74 tests (72 pass, 2 skipped integration). | Optional: remote SSE probe, replay UI tab |
+| 2026-06-14 | **CI fixed** (repo-root paths, clean-setup scan). **Live probe pushed** to GitHub. Rule + CONTINUATION updated. | Optional: remote SSE probe, replay/mutate/decoy/twin UI tabs |

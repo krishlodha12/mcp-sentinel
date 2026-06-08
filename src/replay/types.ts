@@ -93,13 +93,26 @@ export interface ReplaySummary {
   byOwasp: Partial<Record<OwaspCategory, number>>;
   results: ReplayResult[];
   staticScan: ScanSummary;
+  liveProbe?: LiveProbeReplay;
   replayedAt: string;
   replayDurationMs: number;
 }
 
+import type { ProbeOptions, ServerProbeResult } from "../live/types.js";
+
 export interface ReplayOptions {
   corpusPath?: string;
   keepSandbox?: boolean;
+  /** Spawn local MCP servers and merge runtime tools into replay targets. */
+  live?: boolean;
+  liveProbeOptions?: ProbeOptions;
+}
+
+export interface LiveProbeReplay {
+  enabled: boolean;
+  servers: ServerProbeResult[];
+  liveToolsMerged: number;
+  probeDurationMs: number;
 }
 
 export interface SandboxSession {

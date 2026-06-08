@@ -50,6 +50,34 @@ export function printReplayReport(summary: ReplaySummary): void {
   );
   console.log("");
 
+  if (summary.liveProbe?.enabled) {
+    const lp = summary.liveProbe;
+    const connected = lp.servers.filter((s) => s.status === "connected").length;
+    console.log(chalk.bold("  Live probe (runtime MCP)"));
+    console.log(
+      `  Connected: ${connected}/${lp.servers.length}  ·  Tools merged: ${lp.liveToolsMerged}  ·  ${lp.probeDurationMs}ms`
+    );
+    for (const s of lp.servers) {
+      const badge =
+        s.status === "connected"
+          ? chalk.green("connected")
+          : s.status === "failed"
+            ? chalk.red("failed")
+            : chalk.yellow("skipped");
+      const tools =
+        s.status === "connected" ? ` — ${s.tools.length} live tools` : s.skipReason ?? s.error ?? "";
+      console.log(chalk.gray(`  · ${s.serverName}: ${badge}${tools ? ` ${tools}` : ""}`));
+      if (s.drift.onlyLive.length > 0) {
+        console.log(
+          chalk.yellow(
+            `    runtime-only: ${s.drift.onlyLive.slice(0, 5).join(", ")}${s.drift.onlyLive.length > 5 ? "…" : ""}`
+          )
+        );
+      }
+    }
+    console.log("");
+  }
+
   console.log(chalk.bold("  Replay results"));
   console.log("");
   for (const r of summary.results) {

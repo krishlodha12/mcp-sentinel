@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { resolve } from "node:path";
+import { join, resolve } from "node:path";
 import { Command } from "commander";
 import { loadAll } from "./scanner/engine.js";
 import { runChecks } from "./scanner/engine.js";
@@ -49,6 +49,15 @@ import {
   writeTwinJsonReport,
   writeTwinMarkdownReport,
 } from "./twin/reporters/json-reporter.js";
+import { runProbe } from "./live/probe.js";
+import {
+  exitCodeForProbe,
+  printProbeReport,
+} from "./live/reporters/terminal-reporter.js";
+import {
+  writeProbeJsonReport,
+  writeProbeMarkdownReport,
+} from "./live/reporters/json-reporter.js";
 
 const program = new Command();
 
@@ -119,13 +128,19 @@ program
   .option("-m, --markdown <file>", "Write Markdown replay report to file")
   .option("--corpus <file>", "Custom attack corpus JSON")
   .option("--keep-sandbox", "Do not delete temp sandbox after replay")
+  .option("--live", "Spawn local MCP servers and merge runtime tools before replay")
+  .option("--allow-any-package", "Allow non-official packages during live probe")
   .option("-q, --quiet", "Only print summary counts")
   .action(async (path: string, opts) => {
     try {
       const abs = resolve(path);
-      const summary = runReplay(abs, {
+      const summary = await runReplay(abs, {
         corpusPath: opts.corpus,
         keepSandbox: opts.keepSandbox,
+        live: opts.live,
+        liveProbeOptions: opts.live
+          ? { allowAnyPackage: opts.allowAnyPackage }
+          : undefined,
       });
 
       if (!opts.quiet) {
@@ -237,6 +252,51 @@ program
       if (opts.markdown) writeDecoyMarkdownReport(summary, opts.markdown);
 
       process.exit(exitCodeForDecoy(summary));
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exit(3);
+    }
+  });
+
+program
+  .command("probe")
+  .description(
+    "Live probe — spawn local MCP servers from your config, list runtime tools, compare to static scan"
+  )
+  .argument("[path]", "mcp.json or directory containing mcp.json", ".")
+  .option("-o, --output <file>", "Write JSON probe report to file")
+  .option("-m, --markdown <file>", "Write Markdown probe report to file")
+  .option("--allow-remote", "Allow remote URL entries (you must own the endpoint)")
+  .option("--allow-any-package", "Allow packages outside @modelcontextprotocol/* allowlist")
+  .option("--timeout <ms>", "Per-server connect timeout", "45000")
+  .option("-q, --quiet", "Only print summary counts")
+  .action(async (path: string, opts) => {
+    try {
+      const abs = resolve(path);
+      const configPath = abs.endsWith(".json") ? abs : join(abs, "mcp.json");
+      const summary = await runProbe(configPath, {
+        allowRemote: opts.allowRemote,
+        allowAnyPackage: opts.allowAnyPackage,
+        timeoutMs: Number(opts.timeout),
+      });
+
+      if (!opts.quiet) {
+        printProbeReport(summary);
+      } else {
+        console.log(
+          JSON.stringify({
+            config: summary.configPath,
+            connected: summary.servers.filter((s) => s.status === "connected").length,
+            failed: summary.servers.filter((s) => s.status === "failed").length,
+            liveTools: summary.servers.reduce((n, s) => n + s.tools.length, 0),
+          })
+        );
+      }
+
+      if (opts.output) writeProbeJsonReport(summary, opts.output);
+      if (opts.markdown) writeProbeMarkdownReport(summary, opts.markdown);
+
+      process.exit(exitCodeForProbe(summary));
     } catch (err) {
       console.error(err instanceof Error ? err.message : err);
       process.exit(3);

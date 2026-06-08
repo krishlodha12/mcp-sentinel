@@ -1,13 +1,13 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, beforeAll } from "vitest";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { runReplay } from "../src/replay/engine.js";
-import type { ReplayResult } from "../src/replay/types.js";
+import type { ReplayResult, ReplaySummary } from "../src/replay/types.js";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
-function replayDir(name: string) {
-  return runReplay(resolve(root, "fixtures/replay", name));
+async function replayDir(name: string, options?: Parameters<typeof runReplay>[1]) {
+  return runReplay(resolve(root, "fixtures/replay", name), options);
 }
 
 function exploitedIds(results: ReplayResult[]): Set<string> {
@@ -16,13 +16,18 @@ function exploitedIds(results: ReplayResult[]): Set<string> {
   );
 }
 
-function exploitRate(summary: ReturnType<typeof runReplay>): number {
+function exploitRate(summary: ReplaySummary): number {
   return summary.exploited / summary.attacksRun;
 }
 
 describe("vulnerable-agent replay fixture", () => {
-  const summary = replayDir("vulnerable-agent");
-  const exploited = exploitedIds(summary.results);
+  let summary: ReplaySummary;
+  let exploited: Set<string>;
+
+  beforeAll(async () => {
+    summary = await replayDir("vulnerable-agent");
+    exploited = exploitedIds(summary.results);
+  });
 
   it("runs the full attack corpus", () => {
     expect(summary.attacksRun).toBeGreaterThanOrEqual(20);
@@ -44,8 +49,13 @@ describe("vulnerable-agent replay fixture", () => {
 });
 
 describe("clean-agent replay fixture", () => {
-  const summary = replayDir("clean-agent");
-  const exploited = exploitedIds(summary.results);
+  let summary: ReplaySummary;
+  let exploited: Set<string>;
+
+  beforeAll(async () => {
+    summary = await replayDir("clean-agent");
+    exploited = exploitedIds(summary.results);
+  });
 
   it("blocks most attacks", () => {
     expect(exploitRate(summary)).toBeLessThanOrEqual(0.15);
@@ -66,8 +76,13 @@ describe("clean-agent replay fixture", () => {
 });
 
 describe("real-world replay fixture (CVE-2025-6514)", () => {
-  const summary = replayDir("real-world");
-  const exploited = exploitedIds(summary.results);
+  let summary: ReplaySummary;
+  let exploited: Set<string>;
+
+  beforeAll(async () => {
+    summary = await replayDir("real-world");
+    exploited = exploitedIds(summary.results);
+  });
 
   it("flags CVE in static scan", () => {
     const cves = summary.staticScan.findings.filter((f) => f.cve).map((f) => f.cve);
@@ -82,4 +97,16 @@ describe("real-world replay fixture (CVE-2025-6514)", () => {
   it("exploits unpinned npx supply-chain attack", () => {
     expect(exploited.has("unpinned-npx-pull")).toBe(true);
   });
+});
+
+const liveReplay = process.env.LIVE_REPLAY === "1";
+
+describe.skipIf(!liveReplay)("live replay integration", () => {
+  it("merges runtime tools from official filesystem server", async () => {
+    const summary = await replayDir("clean-agent", { live: true });
+    expect(summary.liveProbe?.enabled).toBe(true);
+    expect(summary.liveProbe?.liveToolsMerged).toBeGreaterThan(0);
+    const fs = summary.liveProbe?.servers.find((s) => s.serverName === "filesystem");
+    expect(fs?.status).toBe("connected");
+  }, 120_000);
 });

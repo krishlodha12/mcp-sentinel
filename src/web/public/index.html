@@ -24,7 +24,12 @@
       </div>
     </header>
 
-    <section class="hero card">
+    <nav class="mode-tabs" role="tablist">
+      <button type="button" class="mode-tab active" data-mode="scan" role="tab" aria-selected="true">Static scan</button>
+      <button type="button" class="mode-tab" data-mode="probe" role="tab" aria-selected="false">Live probe</button>
+    </nav>
+
+    <section class="hero card mode-panel" id="panel-scan" data-mode="scan">
       <div class="dropzone" id="dropzone">
         <input type="file" id="file-input" accept=".json,application/json" hidden />
         <div class="dropzone-inner">
@@ -41,6 +46,25 @@
       <button type="button" class="btn btn-primary btn-full" id="paste-scan-btn">Scan pasted config</button>
     </section>
 
+    <section class="hero card mode-panel hidden" id="panel-probe" data-mode="probe">
+      <p class="probe-intro">Spawn official MCP servers from your config, list runtime tools, and compare to static exports.</p>
+      <div class="dropzone" id="probe-dropzone">
+        <input type="file" id="probe-file-input" accept=".json,application/json" hidden />
+        <div class="dropzone-inner">
+          <p class="drop-title">Drop mcp.json for live probe</p>
+          <p class="drop-hint">stdio servers · @modelcontextprotocol/* allowlist · localhost only</p>
+          <div class="drop-buttons">
+            <button type="button" class="btn btn-primary" id="probe-browse-btn">Choose file</button>
+            <button type="button" class="btn btn-secondary" id="probe-demo-btn">Run live demo</button>
+          </div>
+        </div>
+      </div>
+      <p class="paste-label">Or paste mcp.json</p>
+      <textarea id="probe-paste-area" rows="4" placeholder='{"mcpServers": { "memory": { "command": "npx", ... } }}'></textarea>
+      <button type="button" class="btn btn-primary btn-full" id="probe-paste-btn">Probe pasted config</button>
+      <p class="probe-legal">Spawns only servers you declare locally. Remote URLs skipped unless you own the endpoint.</p>
+    </section>
+
     <section id="results" class="results hidden">
       <div class="summary-row" id="summary-row"></div>
 
@@ -54,8 +78,9 @@
         <div class="owasp-chips" id="owasp-chips"></div>
       </div>
 
-      <h2 class="findings-heading">Findings</h2>
+      <h2 class="findings-heading" id="findings-heading">Findings</h2>
       <div id="findings-list"></div>
+      <div id="probe-results" class="probe-results hidden"></div>
       <p id="clean-message" class="clean hidden">No issues matched. That doesn't mean you're bulletproof — runtime behavior still needs review.</p>
     </section>
 

@@ -1,0 +1,142 @@
+---
+description: MCP Sentinel project context — read at session start, update before ending significant work
+alwaysApply: true
+---
+
+# MCP Sentinel — session continuity
+
+## At the start of every session
+
+1. Read `mcp-sentinel/CONTINUATION.md` first (source of truth for status and roadmap).
+2. If touching scanners or fixtures, skim `mcp-sentinel/fixtures/CHECK_MATRIX.md`.
+3. If touching replay or agent fixtures, skim `mcp-sentinel/fixtures/REPLAY_MATRIX.md`.
+4. If touching mutation, skim `mcp-sentinel/fixtures/MUTATION_MATRIX.md`.
+5. If touching decoy/AICON, skim `mcp-sentinel/fixtures/DECOY_MATRIX.md`.
+6. If touching twin/fleet intel, skim `mcp-sentinel/fixtures/TWIN_MATRIX.md`.
+7. If touching live probe, skim `mcp-sentinel/fixtures/live/README.md`.
+8. All five phases are **done**. Live MCP probe is **done**. Do not restart Phase 1–5 from scratch unless the user asks for a rewrite.
+9. Next work is **optional polish** (remote SSE probe, replay/mutate/decoy/twin UI tabs) — not a new phase unless the user scopes one.
+
+## What this project is
+
+Five-phase AI agent security toolchain + **live MCP probe** — **complete**. Main code lives in **`mcp-sentinel/`**.
+
+| Phase | Name | Status |
+|-------|------|--------|
+| 1 | MCP static scanner | **Done** |
+| 2 | Sandbox replay harness | **Done** |
+| 3 | Auto-mutation engine | **Done** |
+| 4 | Decoy / AICON integration | **Done** |
+| 5 | Closed-loop attack twin | **Done** |
+| — | Live MCP probe | **Done** |
+
+Repo: https://github.com/krishlodha12/mcp-sentinel (private). **CI green** on `main` (`npm test` + `scan fixtures/clean-setup`).
+
+## Live probe (done)
+
+- `probe` CLI — spawn local `@modelcontextprotocol/*` stdio servers via MCP SDK, `listTools`, drift vs static scan
+- `replay --live` — merge runtime tools into sandbox targets before attack corpus
+- Web UI **Live probe** tab + `/api/probe`, `/api/probe/demo`
+- Code: `src/live/` (probe-servers, merge, probe), `src/replay/live-enrich.ts`
+- Fixtures: `fixtures/live/official-memory/`, `official-fleet/`, `blocked-unofficial/`
+- Legal defaults: official package allowlist, localhost stdio only, remote URLs skipped unless `--allow-remote`
+- Tests: `tests/live.test.ts`, `tests/live-merge.test.ts` — **74 total** (`npm test`; 2 skipped integration without `LIVE_PROBE=1` / `LIVE_REPLAY=1`)
+
+```bash
+npm run probe -- fixtures/live/official-memory
+npm run probe -- fixtures/live/official-fleet
+npm run replay -- fixtures/replay/clean-agent --live
+```
+
+## Phase 1 deliverables (complete)
+
+- CLI + web UI, 10 checks, OWASP Agentic Top 10 mapping
+- Three fixtures: `fixtures/vulnerable-setup/` (broken), `clean-setup/` (clean), `real-world/` (CVE-2025-6514)
+- Tests: `npm test` — Phase 1 fixture tests must stay green
+- Windows helpers: `setup.ps1`, `run.ps1` if `npm` not on PATH
+
+## Phase 2 deliverables (complete)
+
+- `replay` CLI — agent config → temp sandbox → attack corpus → blocked/exploited report with evidence
+- Attack corpus: `src/replay/corpus/attacks.json` (25 attacks)
+- Reuses Phase 1 `ScanSummary` in every replay report
+- Three fixtures: `fixtures/replay/vulnerable-agent/` (high exploit rate), `clean-agent/` (blocked), `real-world/` (CVE-2025-6514)
+- Tests: `tests/replay.test.ts` — must stay green (`npm test`)
+- Manual verify: `npx tsx src/cli.ts replay fixtures/replay/real-world --output replay.json` (npm swallows `-o`; use `tsx` or `-- --output`)
+
+## Done criteria for any phase (reuse this pattern)
+
+Each phase needs **three fixtures** before it is "done":
+
+1. **Broken** — deliberate flaw this phase should catch/fix
+2. **Clean** — same structure, correct; no false critical/high
+3. **Real-world** — documented public case with expected vs actual in a README
+
+"No three fixtures = code exists, not done."
+
+## Phase 3 deliverables (complete)
+
+- `mutate` CLI — replay → plan mutations from exploit evidence → harden agent.json → replay again → before/after score
+- Planner: `src/mutation/planner.ts` (policies, system prompt, config recommendations)
+- Reuses Phase 2 replay fixtures + `fixtures/MUTATION_MATRIX.md`
+- Tests: `tests/mutation.test.ts` — all tests must stay green (`npm test`)
+
+## Phase 4 deliverables (complete)
+
+- `decoy` CLI — replay → route exploits to ghost tools → harden real path → dual-path report
+- Ghost catalog: `src/decoy/catalog.json` (get/set/execute honeypots)
+- AICON routing in `src/decoy/router.ts`; decoy sandbox in `src/decoy/generator.ts`
+- Reuses Phase 2 replay fixtures + `fixtures/DECOY_MATRIX.md`
+- Real-world doc: `fixtures/decoy/real-world/README.md`
+- Tests: `tests/decoy.test.ts` — must stay green (`npm test`)
+- Manual verify: `npx tsx src/cli.ts decoy fixtures/replay/real-world --output decoy.json`
+
+## Phase 5 deliverables (complete)
+
+- `twin` CLI — fleet probe → intel ledger → cross-harden → fleet decoy → verify
+- Fleet loader: `src/twin/fleet.ts`; intel bus: `src/twin/intel.ts`; engine: `src/twin/engine.ts`
+- Reuses Phase 2 corpus, Phase 3 mutations, Phase 4 decoy catalog
+- Three fixtures: `fixtures/twin/vulnerable-fleet/` (broken), `clean-fleet/` (clean), `real-world-fleet/` (SOC intel)
+- Tests: `tests/twin.test.ts` — must stay green (`npm test`)
+- Manual verify: `npx tsx src/cli.ts twin fixtures/twin/real-world-fleet --output twin.json`
+
+## CI (GitHub Actions)
+
+- Workflow: `.github/workflows/ci.yml` — runs at **repo root** (not `mcp-sentinel/` subfolder)
+- Steps: `npm ci` → `npm test` → `npm run scan -- fixtures/clean-setup`
+- Do **not** scan `vulnerable-setup` or CVE fixtures in CI — they exit 2 by design (critical findings). Fixture contracts are in `tests/fixtures.test.ts`.
+
+## Optional polish (not blocking)
+
+- Remote HTTP/SSE live probe
+- Replay / mutate / decoy / twin tabs in web UI (`npm run ui`)
+
+## GitHub
+
+Phases 1–5 + live probe on `main` at https://github.com/krishlodha12/mcp-sentinel (private). Do not commit CLI output artifacts (`decoy.json`, `replay.json`, `mutation.json`, `twin.json`, `probe.json`).
+
+## Before ending a session with meaningful changes
+
+Update `mcp-sentinel/CONTINUATION.md`:
+
+- What was completed this session
+- What is in progress or blocked
+- Exact next step for the next session
+
+Keep CONTINUATION concise; do not duplicate the full roadmap.
+
+## Key commands
+
+```bash
+cd mcp-sentinel
+npm test
+npm run scan -- fixtures/vulnerable-setup
+npm run probe -- fixtures/live/official-memory
+npm run replay -- fixtures/replay/vulnerable-agent
+npm run replay -- fixtures/replay/clean-agent --live
+npm run mutate -- fixtures/replay/vulnerable-agent
+npm run decoy -- fixtures/replay/vulnerable-agent
+npm run twin -- fixtures/twin/vulnerable-fleet
+npx tsx src/cli.ts replay fixtures/replay/real-world --output replay.json
+npm run ui
+```
