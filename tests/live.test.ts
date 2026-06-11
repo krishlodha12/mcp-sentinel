@@ -40,7 +40,7 @@ describe("live probe — allowlist", () => {
   });
 
   it("skips remote URLs without --allow-remote", async () => {
-    const summary = await runProbe(resolve(root, "fixtures/replay/clean-agent/mcp.json"), {
+    const summary = await runProbe(resolve(root, "fixtures/live/remote-only/mcp.json"), {
       timeoutMs: 5000,
     });
     const remote = summary.servers.find((s) => s.serverName === "secure-remote");
