@@ -1,56 +1,66 @@
 # MCP Sentinel
 
-Static security scanner for [Model Context Protocol](https://modelcontextprotocol.io/) configs. Think antivirus, but for the plugins you hook up to Claude, Cursor, or any other agent host.
+A security toolkit for [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) setup files.
 
-Most people paste MCP server configs from blog posts and never look at them again. That's a problem — tool descriptions are prompt injection surface, `npx -y` pulls whatever's on npm today, and filesystem servers often mount way more than they need to. MCP Sentinel reads your config files *before* you connect them and flags the obvious footguns.
+MCP lets apps like Cursor or Claude Desktop connect to extra tools (read files, run commands, search the web, and so on). Those connections are configured in JSON files on your machine. MCP Sentinel reads those files **before** you connect anything and warns you about common mistakes: hidden instructions in tool descriptions, packages that always fetch the latest version, folders opened too broadly, API keys sitting in plain text, and similar issues.
 
-## What it checks
+Think of it as a lint check for MCP configs — not a guarantee nothing bad can happen, but a fast way to catch obvious problems.
 
-| Check | What it's looking for |
-|-------|------------------------|
-| Hidden instructions | Zero-width Unicode, bidi overrides, HTML comments in tool/prompt text |
-| Base64 payloads | Encoded blobs in descriptions that decode to instructions |
-| Command injection | Shell-style tools, risky schema fields, unsafe launch patterns |
-| Broad permissions | Root/home paths, wildcard dirs, admin-ish env vars |
-| Unpinned versions | `npx -y` without `@version`, `latest`, semver ranges |
-| CVE patterns | Curated list of MCP-adjacent package advisories |
-| Secrets in config | API keys and tokens sitting in JSON on disk |
-| Prompt/resource poisoning | Same text checks on prompts & resources (most scanners skip these) |
+**Built over ~8 weeks (April–June 2026)** — see [CHANGELOG.md](CHANGELOG.md) for the week-by-week timeline.
 
-Findings map to the [OWASP Top 10 for Agentic Applications (2026)](https://genai.owasp.org/resource/owasp-top-10-for-agentic-applications-for-2026/).
+---
+
+## What is this project?
+
+| Piece | What it does (plain English) |
+|-------|------------------------------|
+| **Scan** | Read your MCP config files and list security warnings |
+| **Replay** | Run a fixed set of 25 “bad prompts” against a sample setup in a temp folder and see what would get through |
+| **Mutate** | Suggest tighter rules in the sample config, then replay again to show before/after |
+| **Decoy** | Route suspicious traffic to fake “honeypot” tools while hardening the real setup |
+| **Twin** | Same idea across several MCP servers sharing what they learned |
+| **Probe** | Start real official MCP servers locally, list what tools they expose at runtime, and compare that to the static config |
+| **Web UI** | Browser dashboard for scan and live probe |
+
+Everything runs locally on your machine. No cloud service required.
+
+---
+
+## What the scanner looks for
+
+| Check | Why it matters |
+|-------|----------------|
+| Hidden text | Invisible Unicode or HTML comments hiding extra instructions |
+| Encoded payloads | Base64 blobs that decode to instructions |
+| Risky commands | Shell tools or launch patterns that could run arbitrary code |
+| Wide file access | Configs that expose your whole home folder or drive |
+| Unpinned packages | `npx -y` without a fixed version — npm can change what gets installed |
+| Known bad packages | Curated list of packages with public security advisories |
+| Secrets in JSON | API keys and tokens stored in config files |
+| Poisoned prompts | Same hidden-text checks on prompt and resource fields |
+
+Findings are grouped using the [OWASP Top 10 for Agentic Applications (2026)](https://genai.owasp.org/resource/owasp-top-10-for-agentic-applications-for-2026/) — a standard checklist for tool-connected apps (including ones that use large language models).
+
+---
 
 ## Quick start
 
-**Windows:** If `npm` is not recognized after `setup.ps1`, you didn't restart the terminal yet. Either:
-
-```powershell
-# refresh PATH in the current window (no restart needed)
-$env:Path += ";C:\Program Files\nodejs"
-
-# or use the wrapper (always works)
-.\run.ps1 ui
-.\run.ps1 scan fixtures/vulnerable-setup
-```
-
-First-time setup:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File setup.ps1
-# then close/reopen terminal, or run the $env:Path line above
-```
-
-### CLI
+**Requirements:** Node.js 18+
 
 ```bash
-# Scan a file or directory
-npx tsx src/cli.ts scan path/to/mcp.json
-
-# JSON + Markdown reports
-npx tsx src/cli.ts scan ./my-agent --output report.json --markdown report.md
-
-# CI-friendly exit codes: 2 = critical, 1 = high, 0 = clean
-npx tsx src/cli.ts scan . --min-severity high
+cd mcp-sentinel
+npm install
+npm test
 ```
+
+### Scan a config
+
+```bash
+npm run scan -- fixtures/vulnerable-setup
+npm run scan -- path/to/your/mcp.json --output report.json
+```
+
+Exit codes for CI: `0` = clean enough, `1` = high findings, `2` = critical.
 
 ### Web UI
 
@@ -58,138 +68,130 @@ npx tsx src/cli.ts scan . --min-severity high
 npm run ui
 ```
 
-Opens at `http://localhost:3847`. Drop a config, paste JSON, or hit **Run demo scan** to see findings on the bundled vulnerable fixture.
+Open `http://localhost:3847`. Upload a config, paste JSON, or run the bundled demo scan.
 
-## Supported inputs
+### Windows
 
-- `mcp.json` / `.mcp.json` — Cursor, Claude Desktop, etc.
-- `claude_desktop_config.json`
-- `server.json` — MCP registry format (tools in `_meta`, `packages`, `remotes`)
-- `tools.json` — exported tool manifests
+If `npm` is not found after setup, restart the terminal or run:
 
-## Fixture validation (Phase 1 done criteria)
-
-Three fixtures — see `fixtures/CHECK_MATRIX.md`:
-
-| Folder | Role |
-|--------|------|
-| `fixtures/vulnerable-setup/` | Broken — one planted issue per check |
-| `fixtures/clean-setup/` | Clean — same shape, zero critical/high/medium |
-| `fixtures/real-world/` | CVE-2025-6514 (mcp-remote) from [Vulnerable MCP Project](https://vulnerablemcp.info/) |
-
-```bash
-npm test   # includes fixture contract tests
+```powershell
+powershell -ExecutionPolicy Bypass -File setup.ps1
+.\run.ps1 scan fixtures/vulnerable-setup
 ```
 
-### Replay harness (Phase 2)
+---
 
-Run the attack corpus against an agent fixture (agent.json + MCP configs). Copies configs into an isolated temp sandbox, runs Phase 1 static scan, then replays 25 attacks (injection, jailbreak, exfiltration, multi-turn).
+## Supported config files
+
+- `mcp.json` / `.mcp.json`
+- `claude_desktop_config.json`
+- `server.json` (MCP registry format)
+- `tools.json` (exported tool lists)
+
+---
+
+## How the project grew (5 steps + live probe)
+
+Work happened in phases over two months. Each phase has test fixtures: one broken on purpose, one clean, and one based on a real public security case.
+
+### Step 1 — Static scanner (April 2026)
+
+Reads JSON configs and runs 10 checks. Includes a web UI and CLI.
+
+```bash
+npm run scan -- fixtures/clean-setup
+```
+
+Fixtures: `fixtures/vulnerable-setup/`, `fixtures/clean-setup/`, `fixtures/real-world/` (CVE-2025-6514).
+
+### Step 2 — Replay harness (early May 2026)
+
+Copies a sample agent setup into a temp folder, scans it, then runs 25 scripted attacks (injection, jailbreak-style prompts, data exfiltration patterns).
 
 ```bash
 npm run replay -- fixtures/replay/vulnerable-agent
-npm run replay -- fixtures/replay/clean-agent --output replay.json
+npm run replay -- fixtures/replay/clean-agent
 ```
 
-| Folder | Role |
-|--------|------|
-| `fixtures/replay/vulnerable-agent/` | Broken — high exploit rate (≥60%) |
-| `fixtures/replay/clean-agent/` | Clean — attacks blocked (≤15% exploit rate) |
-| `fixtures/replay/real-world/` | CVE-2025-6514 mcp-remote OAuth scenario |
+Fixtures under `fixtures/replay/`. Details: `fixtures/REPLAY_MATRIX.md`.
 
-See `fixtures/REPLAY_MATRIX.md`.
+### Step 3 — Auto hardening (mid May 2026)
 
-### Auto-mutation engine (Phase 3)
-
-Replay failures drive deterministic hardening of `agent.json` policies and system prompt, then the corpus runs again for a before/after exploit score.
+Uses replay results to tighten sample policies and system prompts, then replays again for a before/after score.
 
 ```bash
 npm run mutate -- fixtures/replay/vulnerable-agent
-npm run mutate -- fixtures/replay/clean-agent --output mutation.json
 ```
 
-| Folder | Role |
-|--------|------|
-| `fixtures/replay/vulnerable-agent/` | Broken — high exploit rate drops after mutate |
-| `fixtures/replay/clean-agent/` | Clean — no policy/prompt changes |
-| `fixtures/replay/real-world/` | CVE-2025-6514 — partial fix (policy only) |
+Details: `fixtures/MUTATION_MATRIX.md`.
 
-See `fixtures/MUTATION_MATRIX.md`.
+### Step 4 — Decoy tools (late May 2026)
 
-### AICON decoy routing (Phase 4)
-
-Exploited attacks get shunted to a decoy MCP surface with ghost tools while the real agent path receives Phase 3 hardening. Dual-path report: decoy detections + real before/after score.
+When an attack would succeed, send it to fake MCP tools (honeypots) instead of the real ones. The real path gets the Step 3 hardening.
 
 ```bash
 npm run decoy -- fixtures/replay/vulnerable-agent
-npm run decoy -- fixtures/replay/clean-agent --output decoy.json
 ```
 
-| Folder | Role |
-|--------|------|
-| `fixtures/replay/vulnerable-agent/` | Broken — 100% decoy catch + real hardens |
-| `fixtures/replay/clean-agent/` | Clean — minimal routing, no false triggers |
-| `fixtures/replay/real-world/` | Documented honeypot pattern + CVE partial fix |
+Details: `fixtures/DECOY_MATRIX.md`.
 
-See `fixtures/DECOY_MATRIX.md` and `fixtures/decoy/real-world/README.md`.
+### Step 5 — Fleet mode (late May 2026)
 
-### Closed-loop attack twin (Phase 5)
-
-Multi-agent fleet runs probe → intel sharing → cross-harden → fleet decoy → verify. Each agent publishes replay outcomes to a shared ledger; siblings receive exploit intel for preemptive hardening.
+Several MCP setups in one fleet. One server’s replay results help harden the others — probe, share notes, harden, verify.
 
 ```bash
 npm run twin -- fixtures/twin/vulnerable-fleet
-npm run twin -- fixtures/twin/clean-fleet --output twin.json
 ```
 
-| Folder | Role |
-|--------|------|
-| `fixtures/twin/vulnerable-fleet/` | Broken — scout + worker, fleet exploit rate drops |
-| `fixtures/twin/clean-fleet/` | Clean — hardened twins, stable low rate |
-| `fixtures/twin/real-world-fleet/` | CVE gateway + observer intel watchlist |
+Details: `fixtures/TWIN_MATRIX.md`.
 
-See `fixtures/TWIN_MATRIX.md` and `fixtures/twin/real-world-fleet/README.md`.
+### Live probe (June 2026)
 
-### Live probe (real MCP servers)
-
-Spawn **official** `@modelcontextprotocol/*` servers from your local `mcp.json`, connect via the MCP SDK, list the **runtime tool surface**, and compare it to the static scan.
+Spawns official `@modelcontextprotocol/*` servers from your config, connects with the MCP SDK, lists runtime tools, and compares them to what the static scan saw.
 
 ```bash
 npm run probe -- fixtures/live/official-memory
-npm run probe -- fixtures/live/official-fleet
+npm run replay -- fixtures/replay/clean-agent --live
 ```
 
-Legal by default: localhost stdio only, official package allowlist, remote URLs skipped unless you pass `--allow-remote` for endpoints you own. See `fixtures/live/README.md`.
+Defaults: localhost only, official package allowlist, remote URLs skipped unless you pass `--allow-remote`. See `fixtures/live/README.md`.
 
-**Web UI:** `npm run ui` → **Live probe** tab (spawn + runtime tool list). **Replay with live servers:** `npm run replay -- fixtures/replay/clean-agent --live`.
+---
+
+## Project layout
 
 ```
-src/twin/             fleet loader, intel ledger, closed-loop engine, reports
-src/decoy/            AICON catalog, ghost tools, routing, reports
-src/mutation/         planner, apply, before/after reports
-src/replay/           sandbox, corpus, evaluators, replay reports
-src/scanner/loaders/  parses config formats
-src/reports/          terminal + JSON + markdown output
-src/web/              local dashboard
-fixtures/             intentional bad configs for demos/tests
+src/scanner/     config loaders + security checks
+src/replay/      sandbox, attack corpus, reports
+src/mutation/    hardening planner + before/after
+src/decoy/       honeypot tools + routing
+src/twin/        multi-server fleet loop
+src/live/        runtime MCP probe
+src/web/         local dashboard
+fixtures/        sample configs for tests and demos
 ```
 
-## Roadmap (5-phase plan)
+---
 
-| Phase | Status |
-|-------|--------|
-| 1. **MCP scanner** | Done — static config checks |
-| 2. **Sandbox replay harness** | Done — attack corpus + agent fixtures |
-| 3. **Auto-mutation engine** | Done — replay-driven agent hardening |
-| 4. **AICON decoy routing** | Done — ghost tools + dual-path report |
-| 5. **Closed-loop attack twin** | Done — fleet intel + cross-harden loop |
+## Tests and CI
 
-See `CONTINUATION.md` for handoff notes if you're picking this up in a new chat.
+```bash
+npm test          # 74 tests (2 optional live integration tests skipped by default)
+npm run scan -- fixtures/clean-setup
+```
 
-## Limitations (be honest on your resume)
+GitHub Actions runs the same on every push to `main`.
 
-- Static only. Runtime-registered tools won't show up unless you export them.
-- CVE list is curated, not exhaustive.
-- Command injection detection is pattern-based — it flags risk, not proof of exploitability.
+---
+
+## Honest limits
+
+- **Scan** is static — it only sees what is in your files unless you use **probe** or **replay --live**.
+- CVE coverage is a curated list, not every npm package.
+- Command checks are pattern-based: they flag risk, not proof of exploitation.
+- **Replay / mutate / decoy / twin** use deterministic simulation — they do not replace a full penetration test.
+
+---
 
 ## License
 

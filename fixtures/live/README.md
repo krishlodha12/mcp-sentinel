@@ -1,26 +1,26 @@
 # Live probe fixtures
 
-Legal live testing against **official** MCP reference servers you spawn locally.
+These configs start **official** MCP reference servers on your machine and list the tools they expose at runtime.
 
-| Folder | Role |
-|--------|------|
-| `official-memory/` | Single `@modelcontextprotocol/server-memory` — fast smoke test |
-| `official-fleet/` | Filesystem + memory — multi-server probe demo |
+| Folder | What it tests |
+|--------|----------------|
+| `official-memory/` | Single `@modelcontextprotocol/server-memory` — quick smoke test |
+| `official-fleet/` | Filesystem + memory — two servers in one config |
 
-## Run (legal — localhost only)
+## Run (localhost only by default)
 
 ```bash
 npm run probe -- fixtures/live/official-memory
 npm run probe -- fixtures/live/official-fleet
 ```
 
-Default guardrails:
+Default safety rules:
 
 - **stdio only** — spawns subprocesses from your `mcp.json`
 - **official allowlist** — `@modelcontextprotocol/*` packages only
-- **no remote URLs** unless you pass `--allow-remote` for endpoints you own
+- **no remote URLs** unless you pass `--allow-remote` for endpoints you control
 - **sandbox paths** — missing filesystem paths get a temp dir automatically
 
-## What impresses people
+## Why probe exists
 
-Static scan reads JSON on disk. Live probe **connects**, calls `listTools`, and shows the **runtime tool surface** — including drift between config exports and what the server actually registers.
+A static scan only reads JSON on disk. Live probe **connects** to the server, calls `listTools`, and shows what is actually registered — including differences from exported config files.
