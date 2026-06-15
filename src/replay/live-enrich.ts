@@ -5,7 +5,7 @@ import type { SandboxSession } from "../replay/types.js";
 import { loadMcpConfig } from "../live/mcp-config.js";
 import { countMergedLiveTools, mergeLiveToolsIntoTargets } from "../live/merge.js";
 import { probeMcpServers } from "../live/probe-servers.js";
-import type { ProbeOptions, ServerProbeResult } from "./types.js";
+import type { ProbeOptions, ServerProbeResult } from "../live/types.js";
 
 function isMcpConfigFile(path: string): boolean {
   if (!existsSync(path)) return false;

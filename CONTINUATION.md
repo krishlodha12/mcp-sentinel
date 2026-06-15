@@ -18,6 +18,8 @@
 | 3 — Auto-mutation engine | **Done** |
 | 4 — Decoy / AICON | **Done** |
 | 5 — Closed-loop twin | **Done** |
+| — Live probe | **Done** |
+| — MCP server (stdio) | **Done** |
 
 ## Phase 1 — done (verified)
 
@@ -105,6 +107,7 @@ Deterministic multi-agent simulation — no live intel bus or external fleet run
 
 ```bash
 cd mcp-sentinel
+npm run build
 npm test
 npm run scan -- fixtures/vulnerable-setup
 npm run replay -- fixtures/replay/vulnerable-agent
@@ -114,8 +117,13 @@ npm run decoy -- fixtures/replay/vulnerable-agent
 npm run twin -- fixtures/twin/vulnerable-fleet
 npm run probe -- fixtures/live/official-memory
 npm run replay -- fixtures/replay/clean-agent --live
+npm run mcp
 npm run ui
 ```
+
+## MCP server (Cursor)
+
+Global config: `~/.cursor/mcp.json` → `"mcp-sentinel"` → `node` + `dist/mcp-server/stdio.js`. Agent chat: scan `~/.cursor/mcp.json` or `fixtures/vulnerable-setup`.
 
 ## Session log (update me)
 
@@ -129,3 +137,6 @@ npm run ui
 | 2026-06-14 | **Live probe** (`probe` CLI): spawns official `@modelcontextprotocol/*` servers via MCP SDK, lists runtime tools, drift vs static scan. Fixtures in `fixtures/live/`. Verified memory + filesystem on Windows. 72 tests green. | Optional: remote SSE probe, probe tab in web UI |
 | 2026-06-14 | **Live probe UI tab** + `/api/probe` endpoints. **Replay `--live`** merges runtime tools before attack corpus. 74 tests (72 pass, 2 skipped integration). | Optional: remote SSE probe, replay UI tab |
 | 2026-06-14 | **CI fixed** (repo-root paths, clean-setup scan). **Live probe pushed** to GitHub. Rule + CONTINUATION updated. | Optional: remote SSE probe, replay/mutate/decoy/twin UI tabs |
+| 2026-06-14 | **GitHub docs rework:** plain-language README, CHANGELOG (Apr–Jun 2026 timeline), package keywords, live fixture README. | Push docs commit; optional: backdate git history for contribution graph |
+| 2026-06-15 | **MCP server mode:** `npm run mcp` exposes scan/probe/replay/mutate/decoy/twin as MCP tools over stdio (`src/mcp-server/`). 78 tests (76 pass, 2 skipped). | Optional: publish npm package; remote SSE transport |
+| 2026-06-15 | **Validated user Cursor config:** static scan 0 critical/high; live probe 7 runtime tools; live replay 25/25 blocked. Pushed MCP server + docs to GitHub. | Optional: sync portfolio repo; LinkedIn post |

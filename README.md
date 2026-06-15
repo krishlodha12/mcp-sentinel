@@ -70,6 +70,31 @@ npm run ui
 
 Open `http://localhost:3847`. Upload a config, paste JSON, or run the bundled demo scan.
 
+### Run as an MCP server (connect from any AI client)
+
+MCP Sentinel can expose its scan/probe/replay tools over stdio so Claude Desktop, Cursor, Claude.ai (remote MCP), or any MCP client can call them directly.
+
+```bash
+npm run mcp
+```
+
+**Cursor / Claude Desktop** — add to your MCP config:
+
+```json
+{
+  "mcpServers": {
+    "mcp-sentinel": {
+      "command": "node",
+      "args": ["C:/path/to/mcp-sentinel/dist/mcp-server/stdio.js"]
+    }
+  }
+}
+```
+
+During development, use `npx tsx src/mcp-server/stdio.ts` instead of the built `dist` path.
+
+**Tools exposed:** `scan_mcp_config`, `probe_mcp_config`, `list_security_checks`, `replay_agent_fixture`, `mutate_agent_fixture`, `decoy_agent_fixture`, `twin_fleet_fixture`.
+
 ### Windows
 
 If `npm` is not found after setup, restart the terminal or run:

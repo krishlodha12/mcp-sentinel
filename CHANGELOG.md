@@ -1,10 +1,15 @@
 # Changelog
 
-Development timeline for MCP Sentinel. Work spanned **April 14 – June 14, 2026** (~8 weeks).
+Development timeline for MCP Sentinel. Work spanned **April 14 – June 15, 2026** (~8 weeks).
 
 ---
 
 ## June 2026
+
+### 2026-06-15 — MCP server mode
+- `npm run mcp` exposes scan, probe, replay, mutate, decoy, and twin as MCP tools over stdio
+- Connect from Cursor, Claude Desktop, or any MCP client via `@modelcontextprotocol/sdk`
+- Windows stdio env fix for live probe; 78 tests (76 pass, 2 skipped)
 
 ### 2026-06-14 — Documentation pass
 - Rewrote README and added this changelog for clearer onboarding

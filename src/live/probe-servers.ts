@@ -18,6 +18,15 @@ import { existsSync, mkdtempSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 
+function stdioEnv(extra?: Record<string, string>): Record<string, string> {
+  const env: Record<string, string> = {};
+  for (const [key, value] of Object.entries(process.env)) {
+    if (value !== undefined) env[key] = value;
+  }
+  if (extra) Object.assign(env, extra);
+  return env;
+}
+
 function isPathArg(arg: string): boolean {
   return /^([/\\~]|\.{1,2}[/\\]|[A-Za-z]:[/\\])/.test(arg);
 }
@@ -113,7 +122,7 @@ async function probeStdioServer(
   const transport = new StdioClientTransport({
     command: resolveNpxCommand(command),
     args: resolvedArgs,
-    env: { ...process.env, ...(entry.env ?? {}) },
+    env: stdioEnv(entry.env),
     stderr: "pipe",
   });
 
