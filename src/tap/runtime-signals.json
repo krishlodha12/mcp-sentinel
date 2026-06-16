@@ -1,0 +1,97 @@
+{
+  "version": "1.0.0",
+  "signals": [
+    {
+      "id": "runtime-shell-command",
+      "name": "Destructive shell in tool call",
+      "description": "Tool arguments contain shell exfiltration or destructive commands",
+      "attackId": "shell-run-command",
+      "category": "privilege-escalation",
+      "owasp": "ASI04",
+      "severity": "critical",
+      "match": {
+        "type": "tool-call-args-pattern",
+        "toolPattern": "run_command|execute|shell|bash|terminal",
+        "pattern": "curl|wget|bash|powershell|/etc/passwd|/etc/shadow|rm\\s+-rf|whoami\\s*&&|cmd\\.exe"
+      }
+    },
+    {
+      "id": "runtime-curl-exfil",
+      "name": "Network exfiltration in tool args",
+      "description": "Tool call arguments reference attacker or exfil endpoints",
+      "attackId": "tool-name-spoof",
+      "category": "injection",
+      "owasp": "ASI04",
+      "severity": "high",
+      "match": {
+        "type": "tool-call-args-pattern",
+        "pattern": "curl.*(?:evil|attacker|exfil)|wget.*(?:evil|attacker)|attacker@|evil\\.example"
+      }
+    },
+    {
+      "id": "runtime-sensitive-path",
+      "name": "Sensitive path access",
+      "description": "Tool call targets system or credential paths outside project scope",
+      "attackId": "global-filesystem-read",
+      "category": "privilege-escalation",
+      "owasp": "ASI06",
+      "severity": "high",
+      "match": {
+        "type": "sensitive-path-access",
+        "paths": ["/etc/", "/etc/passwd", "/etc/shadow", ".ssh", "id_rsa", ".aws/credentials", ".env"]
+      }
+    },
+    {
+      "id": "runtime-exfil-burst",
+      "name": "Rapid tool invocation burst",
+      "description": "Same tool invoked repeatedly in a short window — common exfil/enumeration pattern",
+      "attackId": "base64-tool-decode",
+      "category": "exfiltration",
+      "owasp": "ASI02",
+      "severity": "high",
+      "match": {
+        "type": "tool-call-burst",
+        "minCalls": 10,
+        "windowMs": 60000
+      }
+    },
+    {
+      "id": "runtime-response-injection",
+      "name": "Instruction-like text in tool response",
+      "description": "Tool response contains text attempting to hijack the next agent turn",
+      "attackId": "hidden-tool-instruction",
+      "category": "injection",
+      "owasp": "ASI01",
+      "severity": "critical",
+      "match": {
+        "type": "tool-response-pattern",
+        "pattern": "ignore.*(?:previous|all).*instructions|you must now|system prompt override|\\[SYSTEM\\]|override.*safety|execute.*without.*confirm"
+      }
+    },
+    {
+      "id": "runtime-tool-drift",
+      "name": "Mid-session tool description drift",
+      "description": "tools/list output changed during the session — possible rug-pull",
+      "attackId": "hidden-tool-instruction",
+      "category": "injection",
+      "owasp": "ASI01",
+      "severity": "high",
+      "match": {
+        "type": "tool-list-drift"
+      }
+    },
+    {
+      "id": "runtime-internal-ssrf",
+      "name": "Internal metadata fetch pattern",
+      "description": "Tool arguments reference internal or metadata endpoints",
+      "attackId": "remote-gateway-ssrf",
+      "category": "exfiltration",
+      "owasp": "ASI07",
+      "severity": "medium",
+      "match": {
+        "type": "tool-call-args-pattern",
+        "pattern": "http://internal|169\\.254\\.169\\.254|metadata\\.google|/metadata/"
+      }
+    }
+  ]
+}

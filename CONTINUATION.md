@@ -20,6 +20,7 @@
 | 5 — Closed-loop twin | **Done** |
 | — Live probe | **Done** |
 | — MCP server (stdio) | **Done** |
+| — Session tap + forensics | **Done** |
 
 ## Phase 1 — done (verified)
 
@@ -116,6 +117,8 @@ npm run mutate -- fixtures/replay/vulnerable-agent
 npm run decoy -- fixtures/replay/vulnerable-agent
 npm run twin -- fixtures/twin/vulnerable-fleet
 npm run probe -- fixtures/live/official-memory
+npm run tap -- --log session.jsonl -- npx -y @modelcontextprotocol/server-memory
+npm run forensics -- fixtures/tap/suspicious-session.jsonl
 npm run replay -- fixtures/replay/clean-agent --live
 npm run mcp
 npm run ui
@@ -139,4 +142,5 @@ Global config: `~/.cursor/mcp.json` → `"mcp-sentinel"` → `node` + `dist/mcp-
 | 2026-06-14 | **CI fixed** (repo-root paths, clean-setup scan). **Live probe pushed** to GitHub. Rule + CONTINUATION updated. | Optional: remote SSE probe, replay/mutate/decoy/twin UI tabs |
 | 2026-06-14 | **GitHub docs rework:** plain-language README, CHANGELOG (Apr–Jun 2026 timeline), package keywords, live fixture README. | Push docs commit; optional: backdate git history for contribution graph |
 | 2026-06-15 | **MCP server mode:** `npm run mcp` exposes scan/probe/replay/mutate/decoy/twin as MCP tools over stdio (`src/mcp-server/`). 78 tests (76 pass, 2 skipped). | Optional: publish npm package; remote SSE transport |
-| 2026-06-15 | **Validated user Cursor config:** static scan 0 critical/high; live probe 7 runtime tools; live replay 25/25 blocked. Pushed MCP server + docs to GitHub. | Optional: sync portfolio repo; LinkedIn post |
+| 2026-06-15 | **Validated user Cursor config:** static scan 0 critical/high; live probe 7 runtime tools; live replay 25/25 blocked. Pushed MCP server + docs to GitHub. Rule updated with GitHub/portfolio preferences. | Optional: LinkedIn post; npm publish |
+| 2026-06-15 | **Session tap + forensics:** `tap` proxy, `forensics` corpus matcher, 7 runtime signals, 3 fixtures, demo script, README/CHANGELOG. Windows fixes (allowExcessArguments, shell spawn). User `mcp.json` + `memory-tap`. 86 tests green. | Optional: commit/push; rug-pull poll; MCP server forensics tools |

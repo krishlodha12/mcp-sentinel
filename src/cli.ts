@@ -58,6 +58,13 @@ import {
   writeProbeJsonReport,
   writeProbeMarkdownReport,
 } from "./live/reporters/json-reporter.js";
+import { runTapProxy } from "./tap/proxy.js";
+import { runForensics, exitCodeForForensics } from "./tap/forensics.js";
+import { printForensicsReport } from "./tap/reporters/terminal-reporter.js";
+import {
+  writeForensicsJsonReport,
+  writeForensicsMarkdownReport,
+} from "./tap/reporters/json-reporter.js";
 
 const program = new Command();
 
@@ -297,6 +304,91 @@ program
       if (opts.markdown) writeProbeMarkdownReport(summary, opts.markdown);
 
       process.exit(exitCodeForProbe(summary));
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exit(3);
+    }
+  });
+
+program
+  .command("tap")
+  .description(
+    "Transparent stdio proxy — log every MCP JSON-RPC message between client and upstream server"
+  )
+  .allowExcessArguments(true)
+  .option("--log <file>", "JSONL session log path", "mcp-session.jsonl")
+  .option("--session-id <id>", "Optional session identifier")
+  .action(async (opts) => {
+    try {
+      const raw = process.argv;
+      const tapIdx = raw.lastIndexOf("tap");
+      const sepIdx = raw.indexOf("--", tapIdx + 1);
+      if (sepIdx < 0 || sepIdx >= raw.length - 1) {
+        console.error(
+          "Usage: mcp-sentinel tap [--log <file>] [--session-id <id>] -- <command> [args...]"
+        );
+        console.error(
+          "Example: mcp-sentinel tap --log session.jsonl -- npx -y @modelcontextprotocol/server-memory"
+        );
+        process.exit(3);
+      }
+
+      const upstream = raw.slice(sepIdx + 1);
+      const command = upstream[0];
+      const args = upstream.slice(1);
+      const logPath = resolve(opts.log);
+
+      const code = await runTapProxy({
+        logPath,
+        sessionId: opts.sessionId,
+        command,
+        args,
+      });
+
+      process.exit(code);
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exit(3);
+    }
+  });
+
+program
+  .command("forensics")
+  .description(
+    "Analyze a tap session log — match live traffic against runtime signals and attack corpus"
+  )
+  .argument("<session>", "Path to JSONL session log from tap")
+  .option("-o, --output <file>", "Write JSON forensics report to file")
+  .option("-m, --markdown <file>", "Write Markdown forensics report to file")
+  .option("--corpus <file>", "Custom attack corpus JSON")
+  .option("--signals <file>", "Custom runtime signals catalog JSON")
+  .option("-q, --quiet", "Only print summary counts")
+  .action(async (session: string, opts) => {
+    try {
+      const abs = resolve(session);
+      const summary = runForensics(abs, {
+        corpusPath: opts.corpus,
+        signalsPath: opts.signals,
+      });
+
+      if (!opts.quiet) {
+        printForensicsReport(summary);
+      } else {
+        console.log(
+          JSON.stringify({
+            sessionId: summary.sessionId,
+            toolCalls: summary.toolCallCount,
+            matches: summary.matches.length,
+            critical: summary.bySeverity.critical ?? 0,
+            high: summary.bySeverity.high ?? 0,
+          })
+        );
+      }
+
+      if (opts.output) writeForensicsJsonReport(summary, opts.output);
+      if (opts.markdown) writeForensicsMarkdownReport(summary, opts.markdown);
+
+      process.exit(exitCodeForForensics(summary));
     } catch (err) {
       console.error(err instanceof Error ? err.message : err);
       process.exit(3);

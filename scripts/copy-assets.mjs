@@ -17,3 +17,10 @@ if (existsSync(srcCorpus)) {
   mkdirSync(distCorpus, { recursive: true });
   cpSync(srcCorpus, distCorpus, { recursive: true });
 }
+
+const srcTapSignals = join(root, "../src/tap/runtime-signals.json");
+const distTapSignals = join(root, "../dist/tap/runtime-signals.json");
+if (existsSync(srcTapSignals)) {
+  mkdirSync(dirname(distTapSignals), { recursive: true });
+  cpSync(srcTapSignals, distTapSignals);
+}

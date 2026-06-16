@@ -20,6 +20,8 @@ Think of it as a lint check for MCP configs — not a guarantee nothing bad can 
 | **Decoy** | Route suspicious traffic to fake “honeypot” tools while hardening the real setup |
 | **Twin** | Same idea across several MCP servers sharing what they learned |
 | **Probe** | Start real official MCP servers locally, list what tools they expose at runtime, and compare that to the static config |
+| **Tap** | Transparent stdio proxy — record every MCP JSON-RPC message during a real Cursor session |
+| **Forensics** | Analyze a tap session log; name attack classes from the 25-attack corpus with evidence |
 | **Web UI** | Browser dashboard for scan and live probe |
 
 Everything runs locally on your machine. No cloud service required.
@@ -181,6 +183,49 @@ npm run replay -- fixtures/replay/clean-agent --live
 
 Defaults: localhost only, official package allowlist, remote URLs skipped unless you pass `--allow-remote`. See `fixtures/live/README.md`.
 
+### Session tap + forensics (June 2026)
+
+**Tap** sits between Cursor and an MCP server and logs every JSON-RPC message. **Forensics** matches that traffic against runtime signals linked to the replay attack corpus — things static scan cannot see (burst exfil, rug-pull drift, instruction-like responses).
+
+```bash
+# Demo fixtures (no live server needed)
+npm run forensics -- fixtures/tap/suspicious-session.jsonl
+npm run forensics -- fixtures/tap/clean-session.jsonl
+
+# Record a real session (official memory server through tap)
+npm run record-session
+npm run forensics -- C:/Users/krish/mcp-session.jsonl
+
+# Or wrap any server manually
+npm run tap -- --log session.jsonl -- npx -y @modelcontextprotocol/server-memory
+```
+
+**Cursor** — wrap a server in `~/.cursor/mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "memory-tap": {
+      "command": "npx",
+      "args": [
+        "-y", "tsx",
+        "C:/path/to/mcp-sentinel/src/cli.ts",
+        "tap", "--log", "C:/Users/krish/mcp-session.jsonl", "--",
+        "npx", "-y", "@modelcontextprotocol/server-memory@2026.1.26"
+      ]
+    }
+  }
+}
+```
+
+Restart Cursor, use the server in chat, then run forensics on the log. Details: `fixtures/tap/README.md`.
+
+**One-command demo:**
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/demo-forensics.ps1
+```
+
 ---
 
 ## Project layout
@@ -192,6 +237,7 @@ src/mutation/    hardening planner + before/after
 src/decoy/       honeypot tools + routing
 src/twin/        multi-server fleet loop
 src/live/        runtime MCP probe
+src/tap/         session proxy + runtime forensics
 src/web/         local dashboard
 fixtures/        sample configs for tests and demos
 ```
@@ -201,7 +247,7 @@ fixtures/        sample configs for tests and demos
 ## Tests and CI
 
 ```bash
-npm test          # 74 tests (2 optional live integration tests skipped by default)
+npm test          # 86 tests (2 optional live integration tests skipped by default)
 npm run scan -- fixtures/clean-setup
 ```
 
@@ -215,6 +261,7 @@ GitHub Actions runs the same on every push to `main`.
 - CVE coverage is a curated list, not every npm package.
 - Command checks are pattern-based: they flag risk, not proof of exploitation.
 - **Replay / mutate / decoy / twin** use deterministic simulation — they do not replace a full penetration test.
+- **Tap / forensics** record and analyze real sessions; they complement scan and probe but do not block traffic yet.
 
 ---
 

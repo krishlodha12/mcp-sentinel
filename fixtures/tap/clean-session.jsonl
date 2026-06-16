@@ -1,0 +1,3 @@
+{"type":"meta","sessionId":"demo-clean-session","startedAt":"2026-06-15T12:00:00.000Z","command":"node","args":["mock-server.js"]}
+{"type":"message","ts":"2026-06-15T12:00:01.000Z","direction":"client","method":"tools/call","id":1,"payload":{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"read_file","arguments":{"path":"./notes.txt"}}}}
+{"type":"message","ts":"2026-06-15T12:00:02.000Z","direction":"server","id":1,"payload":{"jsonrpc":"2.0","id":1,"result":{"content":[{"type":"text","text":"Meeting notes for the project."}]}}}

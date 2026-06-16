@@ -6,6 +6,13 @@ Development timeline for MCP Sentinel. Work spanned **April 14 – June 15, 2026
 
 ## June 2026
 
+### 2026-06-15 — Session tap + forensics
+- `tap` CLI: transparent stdio proxy logs MCP JSON-RPC to JSONL
+- `forensics` CLI: match live session traffic to runtime signals + attack corpus (OWASP-mapped)
+- Seven runtime signals: shell exfil, burst, sensitive paths, response injection, tool-list drift, SSRF patterns
+- Fixtures under `fixtures/tap/`; `npm run record-session` for live demo capture
+- 86 tests (84 pass, 2 skipped)
+
 ### 2026-06-15 — MCP server mode
 - `npm run mcp` exposes scan, probe, replay, mutate, decoy, and twin as MCP tools over stdio
 - Connect from Cursor, Claude Desktop, or any MCP client via `@modelcontextprotocol/sdk`
